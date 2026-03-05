@@ -1,0 +1,15 @@
+meta {
+  name: Récupérer un utilisateur par ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/utilisateurs/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}

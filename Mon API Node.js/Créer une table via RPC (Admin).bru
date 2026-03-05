@@ -1,0 +1,17 @@
+meta {
+  name: Créer une table via RPC (Admin)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/admin/create-table
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tableName": ""
+  }
+}

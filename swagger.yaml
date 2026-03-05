@@ -1,0 +1,201 @@
+# ─── 1. INFO : qui est cette API ──────────────────────────────────────────────────────────────────
+openapi: 3.0.0
+info:
+  title: Rayan's API 
+  description:     
+    API de gestion d'utilisateurs.
+    Connectée à Supabase PostgreSQL.
+  version: 1.0.0  # Version de l'API et non pas de OpenAPI
+  contact: 
+    name: Rayane Haddadi
+    email: rayane@test.com
+  license:
+    name: MIT
+
+# ─── 2. SERVERS : Où tourne cette API  ───────────────────────────────────────────────────────────────
+servers:
+  - url: http://localhost:3000
+    description: Serveur local
+
+# ─── 3. PATHS : quelles sont les routes, les fonctionnalités etc. ─────────────────────────────────────────────────────────────────
+paths:
+  /api/utilisateurs:                                                    # ← l'URL de la route
+    get:                                                                # ← la méthode HTTP (get, post, put, delete...)
+      summary: Récupérer tous les utilisateurs                          # ← affiché dans Swagger UI
+      description: Retourne la liste de tous les utilisateurs           # ← détail au clic 
+      tags:
+        - Utilisateurs                                                  # ← pour grouper les routes
+      responses:
+        "200":
+          description: Liste des utilisateurs récupérée avec succès     
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Utilisateur"
+
+    post:
+      summary: Créer un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UtilisateurInput"
+      responses:
+        "201":
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utilisateur"
+
+  /api/utilisateurs/search:
+    get:
+      summary: Rechercher des utilisateurs par nom
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Le nom ou une partie du nom à rechercher
+      responses:
+        "200":
+          description: Résultats de la recherche
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Utilisateur"
+
+  /api/utilisateurs/{id}:
+    get:
+      summary: Récupérer un utilisateur par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de l'utilisateur
+      responses:
+        "200":
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utilisateur"
+        "404":
+          description: Utilisateur non trouvé
+    put:
+      summary: Mettre à jour un utilisateur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UtilisateurInput"
+      responses:
+        "200":
+          description: Utilisateur mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utilisateur"
+    delete:
+      summary: Supprimer un utilisateur par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de l'utilisateur à supprimer
+      responses:
+        "200":
+          description: Utilisateur supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur 1 supprimé avec succès"
+        "500":
+          description: Erreur serveur
+
+  /api/admin/create-table:
+    post:
+      summary: Créer une table via RPC (Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableCreationRequest"
+              type: object
+              required:
+                - tableName
+              properties:
+                tableName:
+                  type: string
+              
+      responses:
+        "200":
+          description: Table créée avec succès
+
+# ─── 4. COMPONENTS : les éléments réutilisables (schémas, réponses...) ────────────────────────────────────────────────────────────
+
+components:
+  schemas:
+    Utilisateur:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nom:
+          type: string
+          example: "Haddadi"
+        prenom:
+          type: string
+          example: "Rayane"
+        email:
+          type: string
+          example: "rayane@example.com"
+
+    UtilisateurInput:
+      type: object
+      required:
+        - nom
+        - prenom
+        - email
+      properties:
+        nom:
+          type: string
+          example: "Haddadi"
+        prenom:
+          type: string
+          example: "Rayane"
+        email:
+          type: string
+          example: "rayane@example.com"
+
+    TableCreationRequest:
+      type: object
+      required:
+        - tableName
+      properties:
+        tableName:
+          type: string
+          example: "nouvelle_table"
