@@ -1,0 +1,18 @@
+meta {
+  name: Assigner une livraison a un livreur
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/livraisons
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "commande_id": 0,
+    "livreur_id": 0
+  }
+}

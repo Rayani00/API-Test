@@ -1,0 +1,21 @@
+meta {
+  name: Creer un produit
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/produits
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "restaurant_id": 0,
+    "nom": "",
+    "description": "",
+    "prix": "",
+    "categorie": ""
+  }
+}

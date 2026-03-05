@@ -1,0 +1,15 @@
+meta {
+  name: Lister les produits d'un restaurant
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/restaurants/:id/produits
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}

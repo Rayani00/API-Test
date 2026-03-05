@@ -1,0 +1,21 @@
+meta {
+  name: Mettre a jour le statut d'une commande
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/commandes/:id/statut
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "statut": ""
+  }
+}

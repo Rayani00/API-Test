@@ -1,0 +1,25 @@
+meta {
+  name: Modifier un client
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/clients/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "nom": "",
+    "prenom": "",
+    "email": "",
+    "telephone": "",
+    "adresse": ""
+  }
+}

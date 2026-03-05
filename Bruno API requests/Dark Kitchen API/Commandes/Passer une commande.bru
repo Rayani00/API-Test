@@ -1,0 +1,26 @@
+meta {
+  name: Passer une commande
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/commandes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "client_id": 0,
+    "restaurant_id": 0,
+    "adresse_livraison": "",
+    "produits": [
+      {
+        "produit_id": 0,
+        "quantite": 0,
+        "prix_unitaire": ""
+      }
+    ]
+  }
+}

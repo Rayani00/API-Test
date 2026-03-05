@@ -1,164 +1,585 @@
-# ─── 1. INFO : qui est cette API ──────────────────────────────────────────────────────────────────
 openapi: 3.0.0
+
 info:
-  title: Rayan's API 
-  description:     
-    API de gestion d'utilisateurs.
-    Connectée à Supabase PostgreSQL.
-  version: 1.0.0  # Version de l'API et non pas de OpenAPI
-  contact: 
+  title: Dark Kitchen API
+  description: |
+    API de gestion d'une dark kitchen.
+    Gere les clients, restaurants, produits, commandes, livreurs et livraisons.
+  version: 1.0.0
+  contact:
     name: Rayane Haddadi
     email: rayane@test.com
-  license:
-    name: MIT
 
-# ─── 2. SERVERS : Où tourne cette API  ───────────────────────────────────────────────────────────────
 servers:
   - url: http://localhost:3000
     description: Serveur local
 
-# ─── 3. PATHS : quelles sont les routes, les fonctionnalités etc. ─────────────────────────────────────────────────────────────────
-paths:
-  /api/utilisateurs:                                                    # ← l'URL de la route
-    get:                                                                # ← la méthode HTTP (get, post, put, delete...)
-      summary: Récupérer tous les utilisateurs                          # ← affiché dans Swagger UI
-      description: Retourne la liste de tous les utilisateurs           # ← détail au clic 
-      tags:
-        - Utilisateurs                                                  # ← pour grouper les routes
-      responses:
-        "200":
-          description: Liste des utilisateurs récupérée avec succès     
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Utilisateur"
+security:
+  - BearerAuth: []   # applique l'auth JWT sur toutes les routes par defaut
 
+paths:
+
+  # ═══ AUTH ════════════════════════════════════════════════════════════════════
+
+  /api/auth/register:
     post:
-      summary: Créer un nouvel utilisateur
+      summary: Creer un compte
+      tags: [Auth]
+      security: []   # exemptee de l'auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UtilisateurInput"
+              $ref: "#/components/schemas/AuthInput"
       responses:
         "201":
-          description: Utilisateur créé avec succès
+          description: Compte cree avec succes
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Utilisateur"
+                $ref: "#/components/schemas/AuthRegisterReponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
-  /api/utilisateurs/search:
-    get:
-      summary: Rechercher des utilisateurs par nom
-      parameters:
-        - name: q
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Le nom ou une partie du nom à rechercher
-      responses:
-        "200":
-          description: Résultats de la recherche
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Utilisateur"
-
-  /api/utilisateurs/{id}:
-    get:
-      summary: Récupérer un utilisateur par ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID de l'utilisateur
-      responses:
-        "200":
-          description: Utilisateur trouvé
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Utilisateur"
-        "404":
-          description: Utilisateur non trouvé
-    put:
-      summary: Mettre à jour un utilisateur
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+  /api/auth/login:
+    post:
+      summary: Se connecter et obtenir un token JWT
+      tags: [Auth]
+      security: []   # exemptee de l'auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UtilisateurInput"
+              $ref: "#/components/schemas/AuthInput"
       responses:
         "200":
-          description: Utilisateur mis à jour
+          description: Connexion reussie
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Utilisateur"
-    delete:
-      summary: Supprimer un utilisateur par ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID de l'utilisateur à supprimer
+                $ref: "#/components/schemas/AuthLoginReponse"
+        "401":
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erreur"
+
+  /api/auth/logout:
+    post:
+      summary: Se deconnecter
+      tags: [Auth]
       responses:
         "200":
-          description: Utilisateur supprimé avec succès
+          description: Deconnecte avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+
+  /api/auth/me:
+    get:
+      summary: Infos de l'utilisateur connecte
+      tags: [Auth]
+      responses:
+        "200":
+          description: Informations de l'utilisateur
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    example: "Utilisateur 1 supprimé avec succès"
-        "500":
-          description: Erreur serveur
+                  user:
+                    type: object
 
-  /api/admin/create-table:
+  # ═══ CLIENTS ════════════════════════════════════════════════════════════════
+
+  /api/clients:
+    get:
+      summary: Lister tous les clients
+      tags: [Clients]
+      responses:
+        "200":
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
     post:
-      summary: Créer une table via RPC (Admin)
+      summary: Creer un client
+      tags: [Clients]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TableCreationRequest"
-              type: object
-              required:
-                - tableName
-              properties:
-                tableName:
-                  type: string
-              
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Client cree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/clients/{id}:
+    get:
+      summary: Recuperer un client par ID
+      tags: [Clients]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
       responses:
         "200":
-          description: Table créée avec succès
+          description: Client trouve
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Modifier un client
+      tags: [Clients]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "200":
+          description: Client modifie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      summary: Supprimer un client
+      tags: [Clients]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Client supprime
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
 
-# ─── 4. COMPONENTS : les éléments réutilisables (schémas, réponses...) ────────────────────────────────────────────────────────────
+  # ═══ RESTAURANTS ════════════════════════════════════════════════════════════
+
+  /api/restaurants:
+    get:
+      summary: Lister tous les restaurants
+      tags: [Restaurants]
+      responses:
+        "200":
+          description: Liste des restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Restaurant"
+    post:
+      summary: Creer un restaurant
+      tags: [Restaurants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestaurantInput"
+      responses:
+        "201":
+          description: Restaurant cree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+
+  /api/restaurants/{id}:
+    get:
+      summary: Recuperer un restaurant par ID
+      tags: [Restaurants]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Restaurant trouve
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/restaurants/{id}/produits:
+    get:
+      summary: Lister les produits d'un restaurant
+      tags: [Restaurants]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Produits du restaurant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Produit"
+
+  # ═══ PRODUITS ═══════════════════════════════════════════════════════════════
+
+  /api/produits:
+    get:
+      summary: Lister tous les produits
+      tags: [Produits]
+      responses:
+        "200":
+          description: Liste des produits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Produit"
+    post:
+      summary: Creer un produit
+      tags: [Produits]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProduitInput"
+      responses:
+        "201":
+          description: Produit cree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Produit"
+
+  /api/produits/{id}:
+    get:
+      summary: Recuperer un produit par ID
+      tags: [Produits]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Produit trouve
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Produit"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Modifier un produit
+      tags: [Produits]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProduitInput"
+      responses:
+        "200":
+          description: Produit modifie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Produit"
+    delete:
+      summary: Supprimer un produit
+      tags: [Produits]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Produit supprime
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+
+  # ═══ COMMANDES ══════════════════════════════════════════════════════════════
+
+  /api/commandes:
+    get:
+      summary: Lister toutes les commandes
+      tags: [Commandes]
+      responses:
+        "200":
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Commande"
+    post:
+      summary: Passer une commande
+      tags: [Commandes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommandeInput"
+      responses:
+        "201":
+          description: Commande creee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Commande"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/commandes/{id}:
+    get:
+      summary: Recuperer une commande par ID
+      tags: [Commandes]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Commande trouvee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Commande"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/commandes/{id}/statut:
+    patch:
+      summary: Mettre a jour le statut d'une commande
+      tags: [Commandes]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [statut]
+              properties:
+                statut:
+                  type: string
+                  enum: [en_attente, en_preparation, prete, en_livraison, livree, annulee]
+                  example: en_preparation
+      responses:
+        "200":
+          description: Statut mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Commande"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ═══ LIVREURS ═══════════════════════════════════════════════════════════════
+
+  /api/livreurs:
+    get:
+      summary: Lister tous les livreurs
+      tags: [Livreurs]
+      responses:
+        "200":
+          description: Liste des livreurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Livreur"
+    post:
+      summary: Creer un livreur
+      tags: [Livreurs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LivreurInput"
+      responses:
+        "201":
+          description: Livreur cree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Livreur"
+
+  # ═══ LIVRAISONS ═════════════════════════════════════════════════════════════
+
+  /api/livraisons:
+    get:
+      summary: Lister toutes les livraisons
+      tags: [Livraisons]
+      responses:
+        "200":
+          description: Liste des livraisons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Livraison"
+    post:
+      summary: Assigner une livraison a un livreur
+      tags: [Livraisons]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LivraisonInput"
+      responses:
+        "201":
+          description: Livraison creee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Livraison"
+
+  /api/livraisons/{id}/livrer:
+    patch:
+      summary: Marquer une livraison comme livree
+      tags: [Livraisons]
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Livraison marquee comme livree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Livraison"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPONENTS
+# ═══════════════════════════════════════════════════════════════════════════════
 
 components:
+
+  # ─── Securite ────────────────────────────────────────────────────────────────
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT obtenu via POST /api/auth/login.
+        A coller dans le champ Authorize en haut de la page sous la forme : Bearer <token>
+
+  # ─── Parametres reutilisables ────────────────────────────────────────────────
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Identifiant unique de la ressource
+
+  # ─── Reponses reutilisables ──────────────────────────────────────────────────
+  responses:
+    NotFound:
+      description: Ressource non trouvee
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Erreur"
+    BadRequest:
+      description: Donnees invalides ou manquantes
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Erreur"
+
+  # ─── Schemas ─────────────────────────────────────────────────────────────────
   schemas:
-    Utilisateur:
+
+    AuthInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@darkkitchen.com"
+        password:
+          type: string
+          format: password
+          example: "motdepasse123"
+
+    AuthLoginReponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          example: 3600
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "uuid-de-l-utilisateur"
+            email:
+              type: string
+              example: "admin@darkkitchen.com"
+
+    AuthRegisterReponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Compte cree avec succes"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+
+    Erreur:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Une erreur est survenue"
+
+    MessageReponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation effectuee avec succes"
+
+    Client:
       type: object
       properties:
         id:
@@ -172,14 +593,23 @@ components:
           example: "Rayane"
         email:
           type: string
+          format: email
           example: "rayane@example.com"
+        telephone:
+          type: string
+          nullable: true
+          example: "+33612345678"
+        adresse:
+          type: string
+          nullable: true
+          example: "12 rue de la Paix, Paris"
+        created_at:
+          type: string
+          format: date-time
 
-    UtilisateurInput:
+    ClientInput:
       type: object
-      required:
-        - nom
-        - prenom
-        - email
+      required: [nom, prenom, email]
       properties:
         nom:
           type: string
@@ -189,13 +619,215 @@ components:
           example: "Rayane"
         email:
           type: string
+          format: email
           example: "rayane@example.com"
-
-    TableCreationRequest:
-      type: object
-      required:
-        - tableName
-      properties:
-        tableName:
+        telephone:
           type: string
-          example: "nouvelle_table"
+          example: "+33612345678"
+        adresse:
+          type: string
+          example: "12 rue de la Paix, Paris"
+
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nom:
+          type: string
+          example: "Burger House"
+        cuisine:
+          type: string
+          enum: [burgers, sushi, pizza, tacos, asiatique, autre]
+          example: "burgers"
+        actif:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+
+    RestaurantInput:
+      type: object
+      required: [nom, cuisine]
+      properties:
+        nom:
+          type: string
+          example: "Burger House"
+        cuisine:
+          type: string
+          enum: [burgers, sushi, pizza, tacos, asiatique, autre]
+          example: "burgers"
+
+    Produit:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        restaurant_id:
+          type: integer
+          example: 1
+        nom:
+          type: string
+          example: "Classic Burger"
+        description:
+          type: string
+          example: "Steak hache, cheddar, salade, tomate"
+        prix:
+          type: number
+          example: 12.90
+        categorie:
+          type: string
+          enum: [entree, plat, dessert, boisson, accompagnement]
+          example: "plat"
+        disponible:
+          type: boolean
+          example: true
+
+    ProduitInput:
+      type: object
+      required: [restaurant_id, nom, prix]
+      properties:
+        restaurant_id:
+          type: integer
+          example: 1
+        nom:
+          type: string
+          example: "Classic Burger"
+        description:
+          type: string
+          example: "Steak hache, cheddar, salade, tomate"
+        prix:
+          type: number
+          example: 12.90
+        categorie:
+          type: string
+          enum: [entree, plat, dessert, boisson, accompagnement]
+          example: "plat"
+
+    Commande:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        client_id:
+          type: integer
+          example: 1
+        restaurant_id:
+          type: integer
+          example: 1
+        statut:
+          type: string
+          enum: [en_attente, en_preparation, prete, en_livraison, livree, annulee]
+          example: "en_attente"
+        adresse_livraison:
+          type: string
+          example: "12 rue de la Paix, Paris"
+        total:
+          type: number
+          example: 17.40
+        created_at:
+          type: string
+          format: date-time
+
+    CommandeInput:
+      type: object
+      required: [client_id, restaurant_id, adresse_livraison, produits]
+      properties:
+        client_id:
+          type: integer
+          example: 1
+        restaurant_id:
+          type: integer
+          example: 1
+        adresse_livraison:
+          type: string
+          example: "12 rue de la Paix, Paris"
+        produits:
+          type: array
+          items:
+            type: object
+            required: [produit_id, quantite, prix_unitaire]
+            properties:
+              produit_id:
+                type: integer
+                example: 1
+              quantite:
+                type: integer
+                example: 2
+              prix_unitaire:
+                type: number
+                example: 12.90
+
+    Livreur:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nom:
+          type: string
+          example: "Martin"
+        prenom:
+          type: string
+          example: "Lucas"
+        telephone:
+          type: string
+          example: "+33611223344"
+        statut:
+          type: string
+          enum: [disponible, en_livraison, inactif]
+          example: "disponible"
+
+    LivreurInput:
+      type: object
+      required: [nom, prenom, telephone]
+      properties:
+        nom:
+          type: string
+          example: "Martin"
+        prenom:
+          type: string
+          example: "Lucas"
+        telephone:
+          type: string
+          example: "+33611223344"
+
+    Livraison:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        commande_id:
+          type: integer
+          example: 1
+        livreur_id:
+          type: integer
+          example: 1
+        statut:
+          type: string
+          enum: [assignee, en_route, livree]
+          example: "assignee"
+        heure_depart:
+          type: string
+          format: date-time
+          nullable: true
+        heure_arrivee:
+          type: string
+          format: date-time
+          nullable: true
+
+    LivraisonInput:
+      type: object
+      required: [commande_id, livreur_id]
+      properties:
+        commande_id:
+          type: integer
+          example: 1
+        livreur_id:
+          type: integer
+          example: 1

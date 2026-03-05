@@ -1,0 +1,15 @@
+meta {
+  name: Recuperer une commande par ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/commandes/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}

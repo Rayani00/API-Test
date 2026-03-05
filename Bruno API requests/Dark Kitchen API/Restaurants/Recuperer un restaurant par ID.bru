@@ -1,0 +1,15 @@
+meta {
+  name: Recuperer un restaurant par ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/restaurants/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}

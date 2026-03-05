@@ -1,0 +1,15 @@
+meta {
+  name: Marquer une livraison comme livree
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/livraisons/:id/livrer
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}
