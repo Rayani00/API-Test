@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "db.yftaggyurqpyyuxhsuhf.supabase.co",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Supabase Dark Kitchen",
+            "database": "postgres",
+            "username": "postgres"
+        }
+    ]
+}

@@ -315,7 +315,11 @@ app.patch("/api/livraisons/:id/livrer", async (req, res) => {
 });
 
 // ─── Demarrage ────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log("Serveur demarre sur http://localhost:" + PORT);
-  console.log("Swagger disponible sur http://localhost:" + PORT + "/api-docs");
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log("Serveur demarre sur http://localhost:" + PORT);
+    console.log("Swagger disponible sur http://localhost:" + PORT + "/api-docs");
+  });
+}
+
+module.exports = app;
