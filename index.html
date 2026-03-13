@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La fonsdalle — Dark Kitchen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS VARIABLES & RESET
+   ═══════════════════════════════════════════ */
+:root {
+  --bg: #0A0A0A;
+  --bg-card: #141414;
+  --bg-elevated: #1A1A1A;
+  --bg-input: #111111;
+  --text: #F5F5F0;
+  --text-dim: #888883;
+  --text-muted: #555550;
+  --accent: #E85D26;
+  --accent-hover: #FF6E35;
+  --accent-glow: rgba(232, 93, 38, 0.15);
+  --green: #2ECC71;
+  --red: #E74C3C;
+  --yellow: #F1C40F;
+  --blue: #3498DB;
+  --radius: 6px;
+  --radius-lg: 12px;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --max-w: 1200px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+a { color: var(--accent); text-decoration: none; transition: color var(--transition); }
+a:hover { color: var(--accent-hover); }
+button { cursor: pointer; font-family: var(--font-body); border: none; outline: none; }
+input, select, textarea {
+  font-family: var(--font-body);
+  background: var(--bg-input);
+  color: var(--text);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  transition: border-color var(--transition);
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT UTILITIES
+   ═══════════════════════════════════════════ */
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════ */
+#toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  background: var(--bg-elevated);
+  border-left: 3px solid var(--accent);
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  max-width: 360px;
+  animation: slideInToast 0.4s ease, fadeOutToast 0.4s ease 3s forwards;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.error { border-left-color: var(--red); }
+.toast.success { border-left-color: var(--green); }
+@keyframes slideInToast { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+@keyframes fadeOutToast { to { opacity:0; transform: translateX(40px); } }
+
+/* ═══════════════════════════════════════════
+   AUTH SCREEN
+   ═══════════════════════════════════════════ */
+#auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.auth-box {
+  width: 100%;
+  max-width: 400px;
+  animation: slideUp 0.6s ease forwards;
+}
+.auth-brand {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+}
+.auth-brand span { color: var(--accent); }
+.auth-sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 40px; }
+.auth-toggle-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #222;
+}
+.auth-toggle-btn {
+  flex: 1;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 10px 0;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+.auth-toggle-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-error { color: var(--red); font-size: 0.85rem; min-height: 20px; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 14px;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  letter-spacing: 0.3px;
+}
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ═══════════════════════════════════════════
+   APP SHELL — HEADER
+   ═══════════════════════════════════════════ */
+#app-shell { display: none; }
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid #1a1a1a;
+}
+.header-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.header-brand {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.header-brand span { color: var(--accent); }
+.header-nav { display: flex; gap: 6px; align-items: center; }
+.nav-link {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  position: relative;
+}
+.nav-link:hover, .nav-link.active { color: var(--text); background: var(--bg-elevated); }
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+.cart-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+  vertical-align: top;
+}
+.btn-logout {
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  margin-left: 8px;
+}
+.btn-logout:hover { color: var(--red); border-color: var(--red); }
+
+/* Mobile nav */
+.nav-toggle { display: none; background: none; color: var(--text); font-size: 1.4rem; padding: 8px; }
+@media (max-width: 768px) {
+  .nav-toggle { display: block; }
+  .header-nav {
+    position: fixed;
+    inset: 64px 0 0 0;
+    background: var(--bg);
+    flex-direction: column;
+    padding: 24px;
+    gap: 4px;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+    z-index: 99;
+  }
+  .header-nav.open { transform: translateX(0); }
+  .nav-link { font-size: 1.1rem; padding: 14px 16px; }
+  .btn-logout { margin-left: 0; margin-top: 12px; }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE SECTIONS
+   ═══════════════════════════════════════════ */
+.page-section { display: none; padding: 40px 0 80px; }
+.page-section.active { display: block; animation: fadeIn 0.35s ease; }
+.section-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.section-sub { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 36px; }
+
+/* ═══════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════ */
+.hero { padding: 80px 0 60px; text-align: center; }
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+.hero-title span { color: var(--accent); }
+.hero-desc { color: var(--text-dim); font-size: 1.1rem; max-width: 500px; margin: 0 auto 36px; }
+.hero-cta {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  padding: 14px 36px;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  transition: all var(--transition);
+}
+.hero-cta:hover { background: var(--accent-hover); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+
+/* ═══════════════════════════════════════════
+   CARDS / GRIDS
+   ═══════════════════════════════════════════ */
+.grid { display: grid; gap: 20px; }
+.grid-3 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--accent);
+  padding: 24px 28px;
+  transition: all var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-glow), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+.card:hover::before { opacity: 1; }
+.card > * { position: relative; z-index: 1; }
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.card-meta { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 12px; }
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.badge-cuisine { background: var(--bg-elevated); color: var(--text-dim); }
+.badge-active { background: rgba(46,204,113,0.12); color: var(--green); }
+.badge-inactive { background: rgba(231,76,60,0.12); color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   MENU PAGE
+   ═══════════════════════════════════════════ */
+.menu-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+  transition: color var(--transition);
+}
+.menu-back:hover { color: var(--text); }
+.menu-category { margin-bottom: 40px; }
+.menu-category-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #222;
+}
+.product-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+  border-left: 3px solid transparent;
+  transition: all var(--transition);
+}
+.product-card:hover { border-left-color: var(--accent); background: var(--bg-elevated); }
+.product-card.unavailable { opacity: 0.45; }
+.product-info { flex: 1; }
+.product-name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.product-desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px; }
+.product-price { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--accent); }
+.btn-add {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  align-self: center;
+}
+.btn-add:hover { background: var(--accent-hover); transform: scale(1.04); }
+.btn-add:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+/* ═══════════════════════════════════════════
+   PANIER
+   ═══════════════════════════════════════════ */
+.cart-empty { text-align: center; padding: 80px 0; color: var(--text-muted); }
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.cart-item-name { flex: 1; font-weight: 500; }
+.cart-item-price { color: var(--text-dim); font-size: 0.9rem; width: 80px; text-align: right; }
+.cart-item-subtotal { font-weight: 600; font-family: var(--font-display); width: 90px; text-align: right; color: var(--accent); }
+.qty-controls { display: flex; align-items: center; gap: 8px; }
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background var(--transition);
+}
+.qty-btn:hover { background: #333; }
+.qty-val { font-weight: 600; min-width: 20px; text-align: center; }
+.cart-footer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #222;
+}
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.cart-total span:last-child { color: var(--accent); }
+.cart-address { margin-bottom: 20px; }
+.cart-address label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px; }
+
+/* ═══════════════════════════════════════════
+   COMMANDES
+   ═══════════════════════════════════════════ */
+.order-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--accent);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  cursor: pointer;
+  transition: background var(--transition);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.order-header:hover { background: var(--bg-elevated); }
+.order-id { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+.order-meta-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.badge-status { font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.status-en_attente { background: rgba(241,196,15,0.12); color: var(--yellow); }
+.status-en_preparation { background: rgba(52,152,219,0.12); color: var(--blue); }
+.status-prete { background: rgba(46,204,113,0.12); color: var(--green); }
+.status-en_livraison { background: rgba(232,93,38,0.12); color: var(--accent); }
+.status-livree { background: rgba(46,204,113,0.2); color: var(--green); }
+.status-annulee { background: rgba(231,76,60,0.15); color: var(--red); }
+.order-total { font-family: var(--font-display); font-weight: 700; color: var(--accent); }
+.order-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  background: var(--bg-elevated);
+}
+.order-details.open { max-height: 600px; }
+.order-details-inner { padding: 16px 24px 20px; }
+.order-product-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+.order-product-row span:last-child { color: var(--text); font-weight: 500; }
+
+/* ═══════════════════════════════════════════
+   ADMIN
+   ═══════════════════════════════════════════ */
+.admin-tabs { display: flex; gap: 4px; margin-bottom: 32px; flex-wrap: wrap; }
+.admin-tab {
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+.admin-tab.active { background: var(--accent); color: #fff; }
+.admin-tab:hover:not(.active) { background: var(--bg-elevated); color: var(--text); }
+.admin-panel { display: none; }
+.admin-panel.active { display: block; animation: fadeIn 0.3s ease; }
+.admin-form {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 28px;
+  border-left: 3px solid var(--accent);
+}
+.admin-form h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 0.8rem; color: var(--text-dim); }
+.btn-sm {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-hover); }
+.btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid #333; }
+.btn-ghost:hover { color: var(--text); border-color: #555; }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
+.btn-danger:hover { background: rgba(231,76,60,0.1); }
+
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid #222;
+}
+.admin-table td { padding: 12px; border-bottom: 1px solid #141414; vertical-align: middle; }
+.admin-table tr:hover td { background: var(--bg-card); }
+.admin-table select { padding: 6px 10px; font-size: 0.82rem; }
+.table-actions { display: flex; gap: 6px; }
+
+/* ═══════════════════════════════════════════
+   LOADER
+   ═══════════════════════════════════════════ */
+.loader { display: flex; align-items: center; justify-content: center; padding: 60px 0; }
+.loader-bar { width: 40px; height: 3px; background: var(--accent); border-radius: 2px; animation: pulse 1.2s ease infinite; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .hero-title { font-size: 2rem; letter-spacing: -1px; }
+  .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .cart-item { flex-wrap: wrap; }
+  .order-header { flex-direction: column; align-items: flex-start; }
+  .admin-table { font-size: 0.8rem; }
+  .admin-table th, .admin-table td { padding: 8px 6px; }
+  .product-card { flex-direction: column; }
+  .btn-add { align-self: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- ═══════ AUTH SCREEN ═══════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-brand">NOCTUR<span>N</span></div>
+    <p class="auth-sub">Dark Kitchen — Livraison d'exception</p>
+    <div class="auth-toggle-row">
+      <button class="auth-toggle-btn active" data-mode="login">Connexion</button>
+      <button class="auth-toggle-btn" data-mode="register">Inscription</button>
+    </div>
+    <form class="auth-form" id="auth-form">
+      <input type="email" id="auth-email" placeholder="Email" required autocomplete="email">
+      <input type="password" id="auth-password" placeholder="Mot de passe" required autocomplete="current-password">
+      <div class="auth-error" id="auth-error"></div>
+      <button type="submit" class="btn-primary" id="auth-submit">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════ APP SHELL ═══════ -->
+<div id="app-shell">
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="#accueil" class="header-brand">NOCTUR<span>N</span></a>
+      <button class="nav-toggle" id="nav-toggle">&#9776;</button>
+      <nav class="header-nav" id="header-nav">
+        <a href="#accueil" class="nav-link" data-page="accueil">Accueil</a>
+        <a href="#panier" class="nav-link" data-page="panier">Panier <span class="cart-badge hidden" id="cart-badge">0</span></a>
+        <a href="#commandes" class="nav-link" data-page="commandes">Commandes</a>
+        <a href="#admin" class="nav-link" data-page="admin">Admin</a>
+        <button class="btn-logout" id="btn-logout">Déconnexion</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ACCUEIL -->
+    <section id="page-accueil" class="page-section container">
+      <div class="hero">
+        <h1 class="hero-title">Cuisine d'<span>exception</span>,<br>livrée chez vous</h1>
+        <p class="hero-desc">Découvrez nos restaurants fantômes et commandez vos plats favoris en quelques clics.</p>
+        <a href="#accueil" class="hero-cta" id="scroll-to-restos">Explorer les restaurants</a>
+      </div>
+      <h2 class="section-title">Nos restaurants</h2>
+      <p class="section-sub">Sélectionnez un restaurant pour découvrir sa carte</p>
+      <div id="restaurants-grid" class="grid grid-3"></div>
+    </section>
+
+    <!-- MENU -->
+    <section id="page-menu" class="page-section container">
+      <a href="#accueil" class="menu-back">&larr; Retour aux restaurants</a>
+      <h2 class="section-title" id="menu-restaurant-name"></h2>
+      <p class="section-sub" id="menu-restaurant-cuisine"></p>
+      <div id="menu-content"></div>
+    </section>
+
+    <!-- PANIER -->
+    <section id="page-panier" class="page-section container">
+      <h2 class="section-title">Votre panier</h2>
+      <p class="section-sub">Vérifiez votre commande avant de valider</p>
+      <div id="cart-content"></div>
+    </section>
+
+    <!-- COMMANDES -->
+    <section id="page-commandes" class="page-section container">
+      <h2 class="section-title">Vos commandes</h2>
+      <p class="section-sub">Suivez l'état de vos commandes en temps réel</p>
+      <div id="orders-content"></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="page-admin" class="page-section container">
+      <h2 class="section-title">Administration</h2>
+      <p class="section-sub">Gestion des restaurants, produits, commandes et livraisons</p>
+      <div class="admin-tabs" id="admin-tabs">
+        <button class="admin-tab active" data-panel="admin-restaurants">Restaurants</button>
+        <button class="admin-tab" data-panel="admin-produits">Produits</button>
+        <button class="admin-tab" data-panel="admin-commandes">Commandes</button>
+        <button class="admin-tab" data-panel="admin-livreurs">Livreurs</button>
+        <button class="admin-tab" data-panel="admin-livraisons">Livraisons</button>
+      </div>
+
+      <!-- Admin: Restaurants -->
+      <div id="admin-restaurants" class="admin-panel active">
+        <div class="admin-form">
+          <h3>Nouveau restaurant</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Nom</label><input id="ar-nom" placeholder="Nom du restaurant"></div>
+            <div class="form-group"><label>Cuisine</label>
+              <select id="ar-cuisine">
+                <option value="burgers">Burgers</option><option value="sushi">Sushi</option>
+                <option value="pizza">Pizza</option><option value="tacos">Tacos</option>
+                <option value="asiatique">Asiatique</option><option value="autre">Autre</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-sm btn-accent" id="ar-submit">Créer</button>
+        </div>
+        <div id="ar-table-wrap"></div>
+      </div>
+
+      <!-- Admin: Produits -->
+      <div id="admin-produits" class="admin-panel">
+        <div class="admin-form">
+          <h3>Nouveau produit</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Restaurant</label><select id="ap-restaurant"></select></div>
+            <div class="form-group"><label>Nom</label><input id="ap-nom" placeholder="Nom"></div>
+            <div class="form-group"><label>Prix</label><input id="ap-prix" type="number" step="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Catégorie</label>
+              <select id="ap-categorie">
+                <option value="entree">Entrée</option><option value="plat">Plat</option>
+                <option value="dessert">Dessert</option><option value="boisson">Boisson</option>
+                <option value="accompagnement">Accompagnement</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px"><label>Description</label><input id="ap-description" placeholder="Description"></div>
+          <button class="btn-sm btn-accent" id="ap-submit">Créer</button>
+        </div>
+        <div id="ap-table-wrap"></div>
+      </div>
+
+      <!-- Admin: Commandes -->
+      <div id="admin-commandes" class="admin-panel">
+        <div id="ac-table-wrap"></div>
+      </div>
+
+      <!-- Admin: Livreurs -->
+      <div id="admin-livreurs" class="admin-panel">
+        <div class="admin-form">
+          <h3>Nouveau livreur</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Nom</label><input id="al-nom" placeholder="Nom"></div>
+            <div class="form-group"><label>Prénom</label><input id="al-prenom" placeholder="Prénom"></div>
+            <div class="form-group"><label>Téléphone</label><input id="al-telephone" placeholder="06..."></div>
+          </div>
+          <button class="btn-sm btn-accent" id="al-submit">Créer</button>
+        </div>
+        <div id="al-table-wrap"></div>
+      </div>
+
+      <!-- Admin: Livraisons -->
+      <div id="admin-livraisons" class="admin-panel">
+        <div class="admin-form">
+          <h3>Assigner une livraison</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Commande</label><select id="alv-commande"></select></div>
+            <div class="form-group"><label>Livreur</label><select id="alv-livreur"></select></div>
+          </div>
+          <button class="btn-sm btn-accent" id="alv-submit">Assigner</button>
+        </div>
+        <div id="alv-table-wrap"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURATION
+   ═══════════════════════════════════════════════════════ */
+const BASE_URL = 'http://localhost:3000';
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════ */
+let accessToken = null;
+let currentUser = null;
+let cart = [];
+let authMode = 'login';
+let isLoggingOut = false;
+
+/* ═══════════════════════════════════════════════════════
+   API — centralized fetch wrapper
+   ═══════════════════════════════════════════════════════ */
+const API = {
+  async request(method, path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    try {
+      const res = await fetch(`${BASE_URL}${path}`, opts);
+      if (res.status === 401 && !path.startsWith('/api/auth/')) {
+        toast('Session expirée — reconnectez-vous.', 'error');
+        logout();
+        return null;
+      }
+      const ct = res.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await res.json() : null;
+      if (!res.ok) {
+        const msg = data?.error || data?.message || `Erreur ${res.status}`;
+        toast(msg, 'error');
+        return null;
+      }
+      return data;
+    } catch (e) {
+      toast('Impossible de contacter le serveur.', 'error');
+      console.error(e);
+      return null;
+    }
+  },
+  register(email, password) { return this.request('POST', '/api/auth/register', { email, password }); },
+  login(email, password) { return this.request('POST', '/api/auth/login', { email, password }); },
+  logoutReq() { return this.request('POST', '/api/auth/logout'); },
+  me() { return this.request('GET', '/api/auth/me'); },
+  getRestaurants() { return this.request('GET', '/api/restaurants'); },
+  getRestaurant(id) { return this.request('GET', `/api/restaurants/${id}`); },
+  getRestaurantProduits(id) { return this.request('GET', `/api/restaurants/${id}/produits`); },
+  createRestaurant(b) { return this.request('POST', '/api/restaurants', b); },
+  getProduits() { return this.request('GET', '/api/produits'); },
+  createProduit(b) { return this.request('POST', '/api/produits', b); },
+  updateProduit(id, b) { return this.request('PUT', `/api/produits/${id}`, b); },
+  deleteProduit(id) { return this.request('DELETE', `/api/produits/${id}`); },
+  getClients() { return this.request('GET', '/api/clients'); },
+  createClient(b) { return this.request('POST', '/api/clients', b); },
+  getCommandes() { return this.request('GET', '/api/commandes'); },
+  getCommande(id) { return this.request('GET', `/api/commandes/${id}`); },
+  createCommande(b) { return this.request('POST', '/api/commandes', b); },
+  updateStatut(id, statut) { return this.request('PATCH', `/api/commandes/${id}/statut`, { statut }); },
+  getLivreurs() { return this.request('GET', '/api/livreurs'); },
+  createLivreur(b) { return this.request('POST', '/api/livreurs', b); },
+  getLivraisons() { return this.request('GET', '/api/livraisons'); },
+  createLivraison(b) { return this.request('POST', '/api/livraisons', b); },
+  livrer(id) { return this.request('PATCH', `/api/livraisons/${id}/livrer`); },
+};
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILS
+   ═══════════════════════════════════════════════════════ */
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function formatPrice(n) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0);
+}
+function loader() {
+  return '<div class="loader"><div class="loader-bar"></div></div>';
+}
+function arr(data) {
+  return Array.isArray(data) ? data : (data?.data || []);
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH
+   ═══════════════════════════════════════════════════════ */
+function initAuth() {
+  document.querySelectorAll('.auth-toggle-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      authMode = btn.dataset.mode;
+      document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Se connecter' : 'Créer un compte';
+      document.getElementById('auth-error').textContent = '';
+    })
+  );
+
+  document.getElementById('auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-submit');
+    errEl.textContent = '';
+    btn.disabled = true;
+
+    if (authMode === 'register') {
+      const res = await API.register(email, password);
+      if (res) {
+        toast('Compte créé ! Connectez-vous.', 'success');
+        document.querySelector('.auth-toggle-btn[data-mode="login"]').click();
+      } else {
+        errEl.textContent = 'Erreur lors de l\'inscription.';
+      }
+    } else {
+      const res = await API.login(email, password);
+      if (res && res.access_token) {
+        accessToken = res.access_token;
+        currentUser = res.user;
+        showApp();
+      } else {
+        errEl.textContent = 'Email ou mot de passe incorrect.';
+      }
+    }
+    btn.disabled = false;
+  });
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  navigate(location.hash || '#accueil');
+}
+
+function logout() {
+  if (isLoggingOut) return;
+  isLoggingOut = true;
+  const hadToken = !!accessToken;
+  accessToken = null;
+  currentUser = null;
+  cart = [];
+  if (hadToken) API.logoutReq();
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-error').textContent = '';
+  location.hash = '';
+  isLoggingOut = false;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ROUTER
+   ═══════════════════════════════════════════════════════ */
+function navigate(hash) {
+  if (!accessToken) return;
+  const h = (hash || '#accueil').replace('#', '');
+  const [page, param] = h.split('/');
+
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+  document.getElementById('header-nav').classList.remove('open');
+
+  switch (page) {
+    case 'menu': showMenu(param); break;
+    case 'panier': showPanier(); break;
+    case 'commandes': showCommandes(); break;
+    case 'admin': showAdmin(); break;
+    default: showAccueil();
+  }
+}
+window.addEventListener('hashchange', () => navigate(location.hash));
+
+/* ═══════════════════════════════════════════════════════
+   ACCUEIL
+   ═══════════════════════════════════════════════════════ */
+async function showAccueil() {
+  const sec = document.getElementById('page-accueil');
+  sec.classList.add('active');
+  const grid = document.getElementById('restaurants-grid');
+  grid.innerHTML = loader();
+
+  const data = await API.getRestaurants();
+  const restos = arr(data);
+  if (!restos.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted)">Aucun restaurant disponible.</p>';
+    return;
+  }
+  grid.innerHTML = restos.map((r, i) => `
+    <div class="card fade-in" style="animation-delay:${i * 0.07}s" onclick="location.hash='#menu/${r.id}'">
+      <div class="card-title">${esc(r.nom)}</div>
+      <div class="card-meta" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-cuisine">${esc(r.cuisine)}</span>
+        <span class="badge ${r.actif !== false ? 'badge-active' : 'badge-inactive'}">${r.actif !== false ? 'Ouvert' : 'Fermé'}</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('scroll-to-restos').onclick = e => {
+    e.preventDefault();
+    grid.scrollIntoView({ behavior: 'smooth' });
+  };
+}
+
+/* ═══════════════════════════════════════════════════════
+   MENU
+   ═══════════════════════════════════════════════════════ */
+async function showMenu(id) {
+  if (!id) { location.hash = '#accueil'; return; }
+  const sec = document.getElementById('page-menu');
+  sec.classList.add('active');
+  const nameEl = document.getElementById('menu-restaurant-name');
+  const cuisineEl = document.getElementById('menu-restaurant-cuisine');
+  const content = document.getElementById('menu-content');
+  nameEl.textContent = ''; cuisineEl.textContent = '';
+  content.innerHTML = loader();
+
+  const [restoRaw, prodsRaw] = await Promise.all([
+    API.getRestaurant(id),
+    API.getRestaurantProduits(id)
+  ]);
+
+  const r = restoRaw?.data || restoRaw;
+  if (!r) { content.innerHTML = '<p style="color:var(--text-muted)">Restaurant introuvable.</p>'; return; }
+  nameEl.textContent = r.nom || '';
+  cuisineEl.textContent = r.cuisine ? `Cuisine ${r.cuisine}` : '';
+
+  const prods = arr(prodsRaw);
+  if (!prods.length) { content.innerHTML = '<p style="color:var(--text-muted)">Aucun produit pour ce restaurant.</p>'; return; }
+
+  const cats = ['entree','plat','dessert','boisson','accompagnement'];
+  const labels = { entree:'Entrées', plat:'Plats', dessert:'Desserts', boisson:'Boissons', accompagnement:'Accompagnements' };
+  let html = '';
+  cats.forEach(cat => {
+    const items = prods.filter(p => p.categorie === cat);
+    if (!items.length) return;
+    html += `<div class="menu-category"><div class="menu-category-title">${labels[cat]}</div>`;
+    items.forEach(p => {
+      const ok = p.disponible !== false;
+      const pid = JSON.stringify(p.id).replace(/"/g, '&quot;');
+      html += `
+        <div class="product-card ${ok ? '' : 'unavailable'}">
+          <div class="product-info">
+            <div class="product-name">${esc(p.nom)}</div>
+            ${p.description ? `<div class="product-desc">${esc(p.description)}</div>` : ''}
+            <div class="product-price">${formatPrice(p.prix)}</div>
+          </div>
+          <button class="btn-add" ${ok ? '' : 'disabled'} onclick="addToCart(${pid}, '${esc(p.nom).replace(/'/g,"\\'")}', ${p.prix}, '${id}', '${esc(r.nom).replace(/'/g,"\\'")}')">${ok ? 'Ajouter' : 'Indisponible'}</button>
+        </div>`;
+    });
+    html += '</div>';
+  });
+  content.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PANIER
+   ═══════════════════════════════════════════════════════ */
+function addToCart(produit_id, nom, prix, restaurant_id, restaurant_nom) {
+  const ex = cart.find(c => c.produit_id === produit_id);
+  if (ex) ex.quantite++;
+  else cart.push({ produit_id, nom, prix_unitaire: prix, quantite: 1, restaurant_id, restaurant_nom });
+  updateCartBadge();
+  toast(`${nom} ajouté au panier`, 'success');
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cart-badge');
+  const n = cart.reduce((s, c) => s + c.quantite, 0);
+  badge.textContent = n;
+  badge.classList.toggle('hidden', n === 0);
+}
+
+function showPanier() {
+  document.getElementById('page-panier').classList.add('active');
+  renderCart();
+}
+
+function renderCart() {
+  const w = document.getElementById('cart-content');
+  if (!cart.length) {
+    w.innerHTML = '<div class="cart-empty"><p>Votre panier est vide.</p><a href="#accueil" style="margin-top:16px;display:inline-block">Découvrir les restaurants</a></div>';
+    return;
+  }
+  const total = cart.reduce((s, c) => s + c.prix_unitaire * c.quantite, 0);
+  let h = '';
+  cart.forEach((c, i) => {
+    h += `
+      <div class="cart-item">
+        <div class="cart-item-name">${esc(c.nom)}</div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">&minus;</button>
+          <span class="qty-val">${c.quantite}</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <div class="cart-item-price">${formatPrice(c.prix_unitaire)}</div>
+        <div class="cart-item-subtotal">${formatPrice(c.prix_unitaire * c.quantite)}</div>
+      </div>`;
+  });
+  h += `
+    <div class="cart-footer">
+      <div class="cart-total"><span>Total</span><span>${formatPrice(total)}</span></div>
+      <div class="cart-address">
+        <label>Adresse de livraison</label>
+        <input id="cart-addr" placeholder="123 rue de la Paix, Paris">
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="submitOrder()">Commander — ${formatPrice(total)}</button>
+    </div>`;
+  w.innerHTML = h;
+}
+
+function changeQty(i, d) {
+  cart[i].quantite += d;
+  if (cart[i].quantite <= 0) cart.splice(i, 1);
+  updateCartBadge();
+  renderCart();
+}
+
+async function submitOrder() {
+  if (!cart.length) return;
+  const addr = document.getElementById('cart-addr')?.value.trim();
+  if (!addr) { toast('Veuillez saisir une adresse de livraison.', 'error'); return; }
+
+  const restaurant_id = cart[0].restaurant_id;
+  const produits = cart.map(c => ({ produit_id: c.produit_id, quantite: c.quantite, prix_unitaire: c.prix_unitaire }));
+
+  // Find or create client linked to current user
+  let clients = arr(await API.getClients());
+  let client = clients.find(c => c.email === currentUser?.email);
+  if (!client) {
+    const res = await API.createClient({
+      nom: currentUser?.email?.split('@')[0] || 'Client',
+      prenom: '',
+      email: currentUser?.email || 'client@nocturn.app'
+    });
+    client = res?.data || res;
+  }
+  if (!client?.id) { toast('Impossible de créer le profil client.', 'error'); return; }
+
+  const res = await API.createCommande({ client_id: client.id, restaurant_id, adresse_livraison: addr, produits });
+  if (res) {
+    toast('Commande passée avec succès !', 'success');
+    cart = [];
+    updateCartBadge();
+    renderCart();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   COMMANDES
+   ═══════════════════════════════════════════════════════ */
+async function showCommandes() {
+  document.getElementById('page-commandes').classList.add('active');
+  const w = document.getElementById('orders-content');
+  w.innerHTML = loader();
+  const orders = arr(await API.getCommandes());
+  if (!orders.length) { w.innerHTML = '<p style="color:var(--text-muted)">Aucune commande.</p>'; return; }
+
+  w.innerHTML = orders.map((o, i) => {
+    const items = o.commande_produits || o.produits || [];
+    const st = o.statut || 'en_attente';
+    return `
+      <div class="order-card fade-in" style="animation-delay:${i * 0.06}s">
+        <div class="order-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <span class="order-id">#${String(o.id).slice(0,8).toUpperCase()}</span>
+          <div class="order-meta-row">
+            <span class="badge-status status-${st}">${st.replace(/_/g,' ')}</span>
+            <span class="order-total">${formatPrice(o.total)}</span>
+          </div>
+        </div>
+        <div class="order-details">
+          <div class="order-details-inner">
+            ${o.adresse_livraison ? `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:10px">Livraison : ${esc(o.adresse_livraison)}</div>` : ''}
+            ${items.map(p => `
+              <div class="order-product-row">
+                <span>${esc(p.produit?.nom || p.nom || '?')} x${p.quantite}</span>
+                <span>${formatPrice((p.prix_unitaire||0)*(p.quantite||1))}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   ADMIN
+   ═══════════════════════════════════════════════════════ */
+function showAdmin() {
+  document.getElementById('page-admin').classList.add('active');
+  const active = document.querySelector('.admin-tab.active');
+  if (active) loadAdminPanel(active.dataset.panel);
+}
+
+function initAdminTabs() {
+  document.getElementById('admin-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.admin-tab');
+    if (!btn) return;
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = document.getElementById(btn.dataset.panel);
+    if (panel) { panel.classList.add('active'); loadAdminPanel(btn.dataset.panel); }
+  });
+}
+
+async function loadAdminPanel(id) {
+  switch(id) {
+    case 'admin-restaurants': await loadAR(); break;
+    case 'admin-produits': await loadAP(); break;
+    case 'admin-commandes': await loadAC(); break;
+    case 'admin-livreurs': await loadAL(); break;
+    case 'admin-livraisons': await loadALV(); break;
+  }
+}
+
+/* --- Restaurants --- */
+async function loadAR() {
+  const w = document.getElementById('ar-table-wrap');
+  w.innerHTML = loader();
+  const rows = arr(await API.getRestaurants());
+  w.innerHTML = `<table class="admin-table"><thead><tr><th>Nom</th><th>Cuisine</th><th>Statut</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.nom)}</td><td>${esc(r.cuisine)}</td><td><span class="badge ${r.actif!==false?'badge-active':'badge-inactive'}">${r.actif!==false?'Actif':'Inactif'}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+document.getElementById('ar-submit').addEventListener('click', async () => {
+  const nom = document.getElementById('ar-nom').value.trim();
+  const cuisine = document.getElementById('ar-cuisine').value;
+  if (!nom) { toast('Nom requis.', 'error'); return; }
+  if (await API.createRestaurant({ nom, cuisine })) { toast('Restaurant créé.','success'); document.getElementById('ar-nom').value=''; loadAR(); }
+});
+
+/* --- Produits --- */
+async function loadAP() {
+  const sel = document.getElementById('ap-restaurant');
+  const restos = arr(await API.getRestaurants());
+  sel.innerHTML = restos.map(r => `<option value="${r.id}">${esc(r.nom)}</option>`).join('');
+
+  const w = document.getElementById('ap-table-wrap');
+  w.innerHTML = loader();
+  const prods = arr(await API.getProduits());
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Nom</th><th>Cat.</th><th>Prix</th><th>Dispo</th><th>Actions</th></tr></thead><tbody>
+    ${prods.map(p => `<tr>
+      <td>${esc(p.nom)}</td><td>${esc(p.categorie)}</td>
+      <td>${formatPrice(p.prix)}</td>
+      <td>${p.disponible!==false?'<span class="badge badge-active">Oui</span>':'<span class="badge badge-inactive">Non</span>'}</td>
+      <td class="table-actions">
+        <button class="btn-sm btn-ghost" onclick="toggleDispo('${p.id}',${p.disponible!==false})">${p.disponible!==false?'Désactiver':'Activer'}</button>
+        <button class="btn-sm btn-danger" onclick="delProduit('${p.id}')">Suppr.</button>
+      </td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+document.getElementById('ap-submit').addEventListener('click', async () => {
+  const restaurant_id = document.getElementById('ap-restaurant').value;
+  const nom = document.getElementById('ap-nom').value.trim();
+  const prix = parseFloat(document.getElementById('ap-prix').value);
+  const categorie = document.getElementById('ap-categorie').value;
+  const description = document.getElementById('ap-description').value.trim();
+  if (!nom || !prix) { toast('Nom et prix requis.','error'); return; }
+  if (await API.createProduit({ restaurant_id, nom, description, prix, categorie })) {
+    toast('Produit créé.','success');
+    ['ap-nom','ap-prix','ap-description'].forEach(id => document.getElementById(id).value='');
+    loadAP();
+  }
+});
+async function toggleDispo(id, cur) { await API.updateProduit(id, { disponible: !cur }); loadAP(); }
+async function delProduit(id) { if (!confirm('Supprimer ce produit ?')) return; await API.deleteProduit(id); toast('Supprimé.','success'); loadAP(); }
+
+/* --- Commandes --- */
+async function loadAC() {
+  const w = document.getElementById('ac-table-wrap');
+  w.innerHTML = loader();
+  const orders = arr(await API.getCommandes());
+  const sts = ['en_attente','en_preparation','prete','en_livraison','livree','annulee'];
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead><tbody>
+    ${orders.map(o => {
+      const cn = o.client ? `${o.client.prenom||''} ${o.client.nom||''}`.trim() : '—';
+      return `<tr>
+        <td style="font-family:var(--font-display);font-size:0.85rem">#${String(o.id).slice(0,8).toUpperCase()}</td>
+        <td>${esc(cn)}</td>
+        <td style="color:var(--accent);font-weight:600">${formatPrice(o.total)}</td>
+        <td><select onchange="updStatus('${o.id}',this.value)">
+          ${sts.map(s=>`<option value="${s}" ${o.statut===s?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
+        </select></td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+}
+async function updStatus(id, st) { if (await API.updateStatut(id, st)) toast(`Statut : ${st.replace(/_/g,' ')}`,'success'); }
+
+/* --- Livreurs --- */
+async function loadAL() {
+  const w = document.getElementById('al-table-wrap');
+  w.innerHTML = loader();
+  const rows = arr(await API.getLivreurs());
+  w.innerHTML = `<table class="admin-table"><thead><tr><th>Nom</th><th>Prénom</th><th>Tél.</th><th>Statut</th></tr></thead><tbody>
+    ${rows.map(l => `<tr><td>${esc(l.nom)}</td><td>${esc(l.prenom)}</td><td>${esc(l.telephone)}</td>
+      <td><span class="badge ${l.statut==='disponible'?'badge-active':'badge-inactive'}">${esc(l.statut||'disponible')}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+document.getElementById('al-submit').addEventListener('click', async () => {
+  const nom = document.getElementById('al-nom').value.trim();
+  const prenom = document.getElementById('al-prenom').value.trim();
+  const telephone = document.getElementById('al-telephone').value.trim();
+  if (!nom||!prenom||!telephone) { toast('Tous les champs requis.','error'); return; }
+  if (await API.createLivreur({ nom, prenom, telephone })) {
+    toast('Livreur créé.','success');
+    ['al-nom','al-prenom','al-telephone'].forEach(id => document.getElementById(id).value='');
+    loadAL();
+  }
+});
+
+/* --- Livraisons --- */
+async function loadALV() {
+  const [cmdRaw, livRaw, dlvRaw] = await Promise.all([API.getCommandes(), API.getLivreurs(), API.getLivraisons()]);
+  const cmds = arr(cmdRaw), livs = arr(livRaw), dlvs = arr(dlvRaw);
+
+  document.getElementById('alv-commande').innerHTML = cmds.map(c => `<option value="${c.id}">#${String(c.id).slice(0,8).toUpperCase()}</option>`).join('');
+  document.getElementById('alv-livreur').innerHTML = livs.map(l => `<option value="${l.id}">${esc(l.prenom)} ${esc(l.nom)}</option>`).join('');
+
+  const w = document.getElementById('alv-table-wrap');
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Commande</th><th>Livreur</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+    ${dlvs.map(d => {
+      const cid = '#' + String(d.commande_id||d.commande?.id||'').slice(0,8).toUpperCase();
+      const ln = d.livreur ? `${d.livreur.prenom||''} ${d.livreur.nom||''}`.trim() : '—';
+      const done = d.statut==='livree'||d.statut==='livrée';
+      return `<tr>
+        <td style="font-family:var(--font-display);font-size:0.85rem">${cid}</td>
+        <td>${esc(ln)}</td>
+        <td><span class="badge ${done?'badge-active':'badge-inactive'}">${esc(d.statut||'en cours')}</span></td>
+        <td>${!done?`<button class="btn-sm btn-accent" onclick="markLivree('${d.id}')">Livrée</button>`:'—'}</td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+}
+document.getElementById('alv-submit').addEventListener('click', async () => {
+  const commande_id = document.getElementById('alv-commande').value;
+  const livreur_id = document.getElementById('alv-livreur').value;
+  if (!commande_id||!livreur_id) { toast('Champs requis.','error'); return; }
+  if (await API.createLivraison({ commande_id, livreur_id })) { toast('Livraison assignée.','success'); loadALV(); }
+});
+async function markLivree(id) { if (await API.livrer(id)) { toast('Livrée !','success'); loadALV(); } }
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initAuth();
+  initAdminTabs();
+  document.getElementById('nav-toggle').addEventListener('click', () => document.getElementById('header-nav').classList.toggle('open'));
+  document.getElementById('btn-logout').addEventListener('click', logout);
+  updateCartBadge();
+});
+</script>
+</body>
+</html>

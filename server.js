@@ -5,14 +5,35 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 const PORT = 3000;
+
+// Middleware CORS : Autorise les requêtes depuis n'importe quelle origine (nécessaire pour index.html)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] REQUÊTE REÇUE : ${req.method} ${req.url}`);
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Le serveur API Dark Kitchen fonctionne !");
+});
 
 const SUPABASE_URL = "https://yftaggyurqpyyuxhsuhf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_03rWk-XyJY5N-FLT8UIrrA_k8sAOSDj";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const swaggerDocument = YAML.load("./swagger.yaml");
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+try {
+  const swaggerDocument = YAML.load("./swagger.yaml");
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} catch (err) {
+  console.log("Info: swagger.yaml non trouvé, documentation API désactivée pour éviter le crash.");
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE AUTH — vérifie le token JWT sur toutes les routes /api/*
@@ -21,8 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const verifierToken = async (req, res, next) => {
   // Exemption des routes auth
-  if (req.path.startsWith("/api/auth")) return next();
-
+  if (req.path.startsWith("/auth")) return next();
   const authHeader = req.headers["authorization"];
   if (!authHeader?.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Token manquant. Connectez-vous d'abord via POST /api/auth/login" });
