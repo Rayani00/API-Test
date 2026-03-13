@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La fonsdalle — Dark Kitchen</title>
+<title>P'tit Creux — Livraison</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -25,8 +25,13 @@
   --red: #E74C3C;
   --yellow: #F1C40F;
   --blue: #3498DB;
-  --radius: 6px;
-  --radius-lg: 12px;
+  --border: #222;
+  --border-light: #1a1a1a;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --radius: 8px;
+  --radius-lg: 14px;
   --font-display: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
   --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -65,7 +70,7 @@ input, select, textarea {
   font-family: var(--font-body);
   background: var(--bg-input);
   color: var(--text);
-  border: 1px solid #222;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 16px;
   font-size: 0.95rem;
@@ -111,7 +116,7 @@ select {
   font-size: 0.9rem;
   max-width: 360px;
   animation: slideInToast 0.4s ease, fadeOutToast 0.4s ease 3s forwards;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: var(--shadow-lg);
 }
 .toast.error { border-left-color: var(--red); }
 .toast.success { border-left-color: var(--green); }
@@ -127,53 +132,240 @@ select {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: #0C0A08;
+}
+#auth-screen::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  background: url('https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=1920&q=80') center/cover no-repeat;
+  filter: blur(5px) brightness(0.45) saturate(1.2);
+}
+#auth-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at 50% 50%, rgba(12,10,8,0.2) 0%, rgba(12,10,8,0.75) 100%);
 }
 .auth-box {
   width: 100%;
-  max-width: 400px;
-  animation: slideUp 0.6s ease forwards;
+  max-width: 440px;
+  position: relative;
+  z-index: 2;
+  background: rgba(18,16,14,0.78);
+  backdrop-filter: blur(40px) saturate(1.3);
+  -webkit-backdrop-filter: blur(40px) saturate(1.3);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 .auth-brand {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: 800;
   letter-spacing: -1px;
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #F5F5F0;
 }
 .auth-brand span { color: var(--accent); }
-.auth-sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 40px; }
+.brand-icon { width: 48px; height: 48px; flex-shrink: 0; }
+.brand-icon-sm { width: 30px; height: 30px; flex-shrink: 0; vertical-align: middle; margin-right: 4px; }
+.auth-sub { color: #9A9690; font-size: 0.9rem; margin-bottom: 28px; }
 .auth-toggle-row {
   display: flex;
   gap: 0;
-  margin-bottom: 28px;
-  border-bottom: 1px solid #222;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .auth-toggle-btn {
   flex: 1;
   background: none;
-  color: var(--text-muted);
+  color: #706B65;
   font-size: 0.9rem;
   font-weight: 500;
   padding: 10px 0;
   border-bottom: 2px solid transparent;
   transition: all var(--transition);
 }
-.auth-toggle-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-.auth-form { display: flex; flex-direction: column; gap: 16px; }
-.auth-error { color: var(--red); font-size: 0.85rem; min-height: 20px; }
+.auth-toggle-btn.active { color: #F5F5F0; border-bottom-color: var(--accent); }
+
+/* Auth panels */
+.auth-panel { display: none; animation: fadeIn 0.35s ease; }
+.auth-panel.active { display: block; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form input, .auth-form select {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 0.92rem;
+  color: #F5F5F0;
+  transition: all var(--transition);
+  width: 100%;
+}
+.auth-form input::placeholder { color: #706B65; }
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 0 3px rgba(232,93,38,0.15);
+}
+.auth-form .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.auth-error { color: #E74C3C; font-size: 0.82rem; min-height: 18px; }
+.auth-success { color: #2ECC71; font-size: 0.82rem; }
+
+/* Password field wrapper */
+.pw-field { position: relative; }
+.pw-field input { padding-right: 46px; }
+.pw-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  color: #706B65;
+  font-size: 0.85rem;
+  padding: 4px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.pw-toggle:hover { color: #F5F5F0; }
+
+/* Username field */
+.username-field { position: relative; }
+.username-field input { padding-right: 46px; }
+.username-regen {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  color: #706B65;
+  font-size: 1rem;
+  padding: 4px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.username-regen:hover { color: var(--accent); }
+.username-status {
+  font-size: 0.78rem;
+  margin-top: 2px;
+  min-height: 16px;
+}
+.username-status.ok { color: #2ECC71; }
+.username-status.taken { color: #E74C3C; }
+
+/* Password strength */
+.pw-strength { display: flex; gap: 4px; align-items: center; margin-top: 2px; }
+.pw-strength-bar { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pw-strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease, background 0.3s ease; width: 0%; }
+.pw-strength-label { font-size: 0.72rem; color: #706B65; min-width: 40px; text-align: right; }
+.pw-match { font-size: 0.78rem; margin-top: 2px; min-height: 16px; }
+.pw-match.ok { color: #2ECC71; }
+.pw-match.no { color: #E74C3C; }
+
+/* OTP input */
+.otp-context { color: #9A9690; font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px; }
+.otp-context strong { color: #F5F5F0; }
+.otp-inputs { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+.otp-inputs input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #F5F5F0;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 0;
+  caret-color: var(--accent);
+  transition: all var(--transition);
+}
+.otp-inputs input:focus {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 0 3px rgba(232,93,38,0.15);
+  outline: none;
+}
+.otp-inputs input.filled { border-color: var(--accent); }
+.otp-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.otp-resend {
+  background: none;
+  color: #706B65;
+  font-size: 0.82rem;
+  padding: 0;
+  transition: color var(--transition);
+}
+.otp-resend:not(:disabled):hover { color: var(--accent); }
+.otp-resend:disabled { cursor: not-allowed; }
+.otp-back {
+  background: none;
+  color: #706B65;
+  font-size: 0.82rem;
+  padding: 0;
+  transition: color var(--transition);
+}
+.otp-back:hover { color: #F5F5F0; }
+
+/* Buttons */
 .btn-primary {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
   font-size: 0.95rem;
   padding: 14px;
-  border-radius: var(--radius);
+  border-radius: 10px;
   transition: all var(--transition);
   letter-spacing: 0.3px;
+  box-shadow: 0 4px 20px rgba(232,93,38,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
 }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 28px rgba(232,93,38,0.4); }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-link { color: #706B65; font-size: 0.82rem; text-align: center; margin-top: 8px; }
+.auth-link a { color: var(--accent); cursor: pointer; }
+.auth-link a:hover { color: var(--accent-hover); }
+
+/* Confirmation message */
+.auth-confirm-msg {
+  text-align: center;
+  padding: 20px 0;
+}
+.auth-confirm-msg .confirm-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  display: block;
+}
+.auth-confirm-msg h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #F5F5F0;
+  margin-bottom: 10px;
+}
+.auth-confirm-msg p {
+  color: #9A9690;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.auth-confirm-msg p strong { color: var(--accent); }
 
 /* ═══════════════════════════════════════════
    APP SHELL — HEADER
@@ -183,10 +375,10 @@ select {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10,10,10,0.85);
+  background: rgba(10,10,10,0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid var(--border-light);
 }
 .header-inner {
   max-width: var(--max-w);
@@ -203,6 +395,9 @@ select {
   font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .header-brand span { color: var(--accent); }
 .header-nav { display: flex; gap: 6px; align-items: center; }
@@ -242,7 +437,7 @@ select {
   color: var(--text-muted);
   font-size: 0.8rem;
   padding: 6px 12px;
-  border: 1px solid #333;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   transition: all var(--transition);
   margin-left: 8px;
@@ -325,6 +520,7 @@ select {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 .card::before {
   content: '';
@@ -334,7 +530,7 @@ select {
   opacity: 0;
   transition: opacity var(--transition);
 }
-.card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 .card:hover::before { opacity: 1; }
 .card > * { position: relative; z-index: 1; }
 .card-title {
@@ -380,7 +576,7 @@ select {
   color: var(--accent);
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--border);
 }
 .product-card {
   background: var(--bg-card);
@@ -393,6 +589,7 @@ select {
   margin-bottom: 10px;
   border-left: 3px solid transparent;
   transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 .product-card:hover { border-left-color: var(--accent); background: var(--bg-elevated); }
 .product-card.unavailable { opacity: 0.45; }
@@ -424,7 +621,7 @@ select {
   align-items: center;
   gap: 16px;
   padding: 16px 0;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid var(--border-light);
 }
 .cart-item-name { flex: 1; font-weight: 500; }
 .cart-item-price { color: var(--text-dim); font-size: 0.9rem; width: 80px; text-align: right; }
@@ -443,12 +640,12 @@ select {
   font-weight: 600;
   transition: background var(--transition);
 }
-.qty-btn:hover { background: #333; }
+.qty-btn:hover { background: var(--bg-elevated); }
 .qty-val { font-weight: 600; min-width: 20px; text-align: center; }
 .cart-footer {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 2px solid #222;
+  border-top: 2px solid var(--border);
 }
 .cart-total {
   display: flex;
@@ -471,6 +668,7 @@ select {
   border-left: 3px solid var(--accent);
   margin-bottom: 14px;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 .order-header {
   display: flex;
@@ -533,6 +731,7 @@ select {
   padding: 24px;
   margin-bottom: 28px;
   border-left: 3px solid var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 .admin-form h3 {
   font-family: var(--font-display);
@@ -552,8 +751,8 @@ select {
 }
 .btn-accent { background: var(--accent); color: #fff; }
 .btn-accent:hover { background: var(--accent-hover); }
-.btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid #333; }
-.btn-ghost:hover { color: var(--text); border-color: #555; }
+.btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
 .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
 .btn-danger:hover { background: rgba(231,76,60,0.1); }
 
@@ -566,10 +765,10 @@ select {
   letter-spacing: 1px;
   color: var(--text-muted);
   padding: 10px 12px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--border);
 }
-.admin-table td { padding: 12px; border-bottom: 1px solid #141414; vertical-align: middle; }
-.admin-table tr:hover td { background: var(--bg-card); }
+.admin-table td { padding: 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.admin-table tr:hover td { background: var(--bg-elevated); }
 .admin-table select { padding: 6px 10px; font-size: 0.82rem; }
 .table-actions { display: flex; gap: 6px; }
 
@@ -602,18 +801,92 @@ select {
 <!-- ═══════ AUTH SCREEN ═══════ -->
 <div id="auth-screen">
   <div class="auth-box">
-    <div class="auth-brand">NOCTUR<span>N</span></div>
-    <p class="auth-sub">Dark Kitchen — Livraison d'exception</p>
-    <div class="auth-toggle-row">
+    <div class="auth-brand"><svg class="brand-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 22c0-9 7-14 16-14s16 5 16 14" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" fill="#F5DEB3"/><path d="M2 26h36" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M4 22h32" stroke="#8B4513" stroke-width="1.5"/><ellipse cx="10" cy="23.5" rx="2.5" ry="1.5" fill="#4CAF50"/><ellipse cx="17" cy="23.5" rx="2.5" ry="1.5" fill="#F44336"/><ellipse cx="24" cy="23.5" rx="2.5" ry="1.5" fill="#4CAF50"/><ellipse cx="31" cy="23.5" rx="2.5" ry="1.5" fill="#FFC107"/><path d="M3 29c2 2 6 3 17 3s15-1 17-3" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" fill="#F5DEB3"/></svg> P'tit <span>Creux</span></div>
+    <p class="auth-sub">Vos petites faims, livrées en grand</p>
+
+    <!-- Toggle login / register -->
+    <div class="auth-toggle-row" id="auth-toggle-row">
       <button class="auth-toggle-btn active" data-mode="login">Connexion</button>
       <button class="auth-toggle-btn" data-mode="register">Inscription</button>
     </div>
-    <form class="auth-form" id="auth-form">
-      <input type="email" id="auth-email" placeholder="Email" required autocomplete="email">
-      <input type="password" id="auth-password" placeholder="Mot de passe" required autocomplete="current-password">
-      <div class="auth-error" id="auth-error"></div>
-      <button type="submit" class="btn-primary" id="auth-submit">Se connecter</button>
-    </form>
+
+    <!-- ═══ PANEL 1: LOGIN ═══ -->
+    <div class="auth-panel active" id="panel-login">
+      <form class="auth-form" id="form-login">
+        <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+        <div class="pw-field">
+          <input type="password" id="login-password" placeholder="Mot de passe" required autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('login-password', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="auth-error" id="login-error"></div>
+        <button type="submit" class="btn-primary" id="login-submit">Se connecter</button>
+      </form>
+    </div>
+
+    <!-- ═══ PANEL 2: OTP VERIFICATION ═══ -->
+    <div class="auth-panel" id="panel-otp">
+      <div class="otp-context" id="otp-context"></div>
+      <div class="otp-inputs" id="otp-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      </div>
+      <div class="auth-error" id="otp-error"></div>
+      <button class="btn-primary" id="otp-submit" disabled>Vérifier le code</button>
+      <div class="otp-actions">
+        <button class="otp-back" id="otp-back" type="button">&larr; Retour</button>
+        <button class="otp-resend" id="otp-resend" type="button" disabled>Renvoyer le code (60s)</button>
+      </div>
+    </div>
+
+    <!-- ═══ PANEL 3: REGISTER ═══ -->
+    <div class="auth-panel" id="panel-register">
+      <form class="auth-form" id="form-register">
+        <div class="form-row-2">
+          <input type="text" id="reg-prenom" placeholder="Prénom" required>
+          <input type="text" id="reg-nom" placeholder="Nom" required>
+        </div>
+        <input type="email" id="reg-email" placeholder="Adresse e-mail" required autocomplete="email">
+        <div class="username-field">
+          <input type="text" id="reg-username" placeholder="Nom d'utilisateur" required>
+          <button type="button" class="username-regen" id="reg-username-regen" title="Régénérer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          </button>
+        </div>
+        <div class="username-status" id="reg-username-status"></div>
+        <div class="pw-field">
+          <input type="password" id="reg-password" placeholder="Mot de passe" required autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('reg-password', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pw-strength"><div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-strength-fill"></div></div><span class="pw-strength-label" id="pw-strength-label"></span></div>
+        <div class="pw-field">
+          <input type="password" id="reg-password2" placeholder="Confirmer le mot de passe" required autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('reg-password2', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pw-match" id="pw-match-msg"></div>
+        <div class="auth-error" id="reg-error"></div>
+        <button type="submit" class="btn-primary" id="reg-submit" disabled>Créer mon compte</button>
+      </form>
+    </div>
+
+    <!-- ═══ PANEL 4: CONFIRMATION ═══ -->
+    <div class="auth-panel" id="panel-confirm">
+      <div class="auth-confirm-msg">
+        <span class="confirm-icon">&#9993;</span>
+        <h3>Vérifiez votre boîte mail</h3>
+        <p id="confirm-text"></p>
+      </div>
+      <button class="btn-primary" onclick="switchAuthPanel('login')" style="margin-top:16px">Retour à la connexion</button>
+    </div>
   </div>
 </div>
 
@@ -621,7 +894,7 @@ select {
 <div id="app-shell">
   <header class="app-header">
     <div class="header-inner">
-      <a href="#accueil" class="header-brand">NOCTUR<span>N</span></a>
+      <a href="#accueil" class="header-brand"><svg class="brand-icon-sm" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 22c0-9 7-14 16-14s16 5 16 14" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" fill="#F5DEB3"/><path d="M2 26h36" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M4 22h32" stroke="#8B4513" stroke-width="1.5"/><ellipse cx="10" cy="23.5" rx="2.5" ry="1.5" fill="#4CAF50"/><ellipse cx="17" cy="23.5" rx="2.5" ry="1.5" fill="#F44336"/><ellipse cx="24" cy="23.5" rx="2.5" ry="1.5" fill="#4CAF50"/><ellipse cx="31" cy="23.5" rx="2.5" ry="1.5" fill="#FFC107"/><path d="M3 29c2 2 6 3 17 3s15-1 17-3" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" fill="#F5DEB3"/></svg> P'tit <span>Creux</span></a>
       <button class="nav-toggle" id="nav-toggle">&#9776;</button>
       <nav class="header-nav" id="header-nav">
         <a href="#accueil" class="nav-link" data-page="accueil">Accueil</a>
@@ -637,8 +910,8 @@ select {
     <!-- ACCUEIL -->
     <section id="page-accueil" class="page-section container">
       <div class="hero">
-        <h1 class="hero-title">Cuisine d'<span>exception</span>,<br>livrée chez vous</h1>
-        <p class="hero-desc">Découvrez nos restaurants fantômes et commandez vos plats favoris en quelques clics.</p>
+        <h1 class="hero-title">Un p'tit <span>creux</span> ?<br>On s'en occupe</h1>
+        <p class="hero-desc">Découvrez nos restaurants et commandez vos plats favoris, livrés chez vous en quelques clics.</p>
         <a href="#accueil" class="hero-cta" id="scroll-to-restos">Explorer les restaurants</a>
       </div>
       <h2 class="section-title">Nos restaurants</h2>
@@ -768,7 +1041,6 @@ const BASE_URL = 'http://localhost:3000';
 let accessToken = null;
 let currentUser = null;
 let cart = [];
-let authMode = 'login';
 let isLoggingOut = false;
 
 /* ═══════════════════════════════════════════════════════
@@ -859,44 +1131,351 @@ function arr(data) {
 /* ═══════════════════════════════════════════════════════
    AUTH
    ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   AUTH — UTILITIES
+   ═══════════════════════════════════════════════════════ */
+
+// Password visibility toggle
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.style.opacity = show ? '1' : '0.5';
+}
+
+// Generate username from prenom + nom
+function generateUsername(prenom, nom) {
+  const clean = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
+  const suffix = String(Math.floor(1000 + Math.random() * 9000));
+  return `${clean(prenom)}.${clean(nom)}_${suffix}`;
+}
+
+// Simulate username availability check
+let usernameCheckTimer = null;
+function checkUsernameAvailability(username) {
+  const el = document.getElementById('reg-username-status');
+  if (!username || username.length < 3) { el.textContent = ''; el.className = 'username-status'; return; }
+  el.textContent = 'Vérification...';
+  el.className = 'username-status';
+  clearTimeout(usernameCheckTimer);
+  usernameCheckTimer = setTimeout(() => {
+    // Simulated — always available unless it contains "taken"
+    const available = !username.includes('taken');
+    el.innerHTML = available ? '&#10003; Disponible' : '&#10007; Déjà pris';
+    el.className = `username-status ${available ? 'ok' : 'taken'}`;
+  }, 500);
+}
+
+// Password strength
+function evaluatePassword(pw) {
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return Math.min(score, 3); // 0-3
+}
+
+function updatePasswordStrength(pw) {
+  const score = evaluatePassword(pw);
+  const fill = document.getElementById('pw-strength-fill');
+  const label = document.getElementById('pw-strength-label');
+  const levels = [
+    { w: '0%', c: 'transparent', t: '' },
+    { w: '33%', c: '#E74C3C', t: 'Faible' },
+    { w: '66%', c: '#F1C40F', t: 'Moyen' },
+    { w: '100%', c: '#2ECC71', t: 'Fort' }
+  ];
+  fill.style.width = levels[score].w;
+  fill.style.background = levels[score].c;
+  label.textContent = levels[score].t;
+  label.style.color = levels[score].c;
+}
+
+function checkPasswordMatch() {
+  const pw = document.getElementById('reg-password').value;
+  const pw2 = document.getElementById('reg-password2').value;
+  const el = document.getElementById('pw-match-msg');
+  if (!pw2) { el.textContent = ''; el.className = 'pw-match'; return false; }
+  if (pw === pw2) { el.innerHTML = '&#10003; Mots de passe identiques'; el.className = 'pw-match ok'; return true; }
+  el.innerHTML = '&#10007; Les mots de passe ne correspondent pas'; el.className = 'pw-match no'; return false;
+}
+
+// Validate register form
+function validateRegisterForm() {
+  const f = id => document.getElementById(id).value.trim();
+  const valid = f('reg-prenom') && f('reg-nom') && f('reg-email') && f('reg-username').length >= 3
+    && f('reg-password').length >= 6 && f('reg-password') === f('reg-password2');
+  document.getElementById('reg-submit').disabled = !valid;
+  return valid;
+}
+
+// OTP generation (simulated)
+let currentOTP = null;
+let otpExpiry = null;
+let otpAttempts = 0;
+const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 min
+const RESEND_COOLDOWN = 60; // seconds
+const MAX_OTP_ATTEMPTS = 3;
+
+function generateOTP() {
+  currentOTP = String(Math.floor(100000 + Math.random() * 900000));
+  otpExpiry = Date.now() + OTP_EXPIRY_MS;
+  otpAttempts = 0;
+  console.log(`%c[OTP] Code de vérification : ${currentOTP}`, 'color:#E85D26;font-size:16px;font-weight:bold');
+  return currentOTP;
+}
+
+function validateOTP(code) {
+  if (otpAttempts >= MAX_OTP_ATTEMPTS) return { ok: false, reason: 'locked' };
+  if (Date.now() > otpExpiry) return { ok: false, reason: 'expired' };
+  otpAttempts++;
+  if (code === currentOTP) { currentOTP = null; return { ok: true }; }
+  return { ok: false, reason: otpAttempts >= MAX_OTP_ATTEMPTS ? 'locked' : 'invalid' };
+}
+
+function maskEmail(email) {
+  const [user, domain] = email.split('@');
+  return user[0] + '***@' + domain;
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH — PANEL SWITCHING
+// ═══════════════════════════════════════════════════════
+let loginEmail = '';
+
+function switchAuthPanel(panel) {
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`panel-${panel}`);
+  if (target) target.classList.add('active');
+
+  // Show/hide toggle row for login/register, hide for otp/confirm
+  const toggleRow = document.getElementById('auth-toggle-row');
+  toggleRow.style.display = (panel === 'login' || panel === 'register') ? 'flex' : 'none';
+
+  // Update toggle active state
+  document.querySelectorAll('.auth-toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === panel || (panel === 'otp' && b.dataset.mode === 'login'));
+  });
+
+  // Auto-focus first input
+  setTimeout(() => {
+    const firstInput = target?.querySelector('input');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH — OTP INPUT LOGIC
+// ═══════════════════════════════════════════════════════
+function initOTPInputs() {
+  const inputs = document.querySelectorAll('#otp-inputs input');
+
+  inputs.forEach((input, i) => {
+    input.addEventListener('input', e => {
+      const val = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = val.slice(0, 1);
+      if (val && i < inputs.length - 1) inputs[i + 1].focus();
+      e.target.classList.toggle('filled', !!val);
+      updateOTPSubmitState();
+    });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !input.value && i > 0) {
+        inputs[i - 1].focus();
+        inputs[i - 1].value = '';
+        inputs[i - 1].classList.remove('filled');
+        updateOTPSubmitState();
+      }
+    });
+
+    // Paste support
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasted = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '').slice(0, 6);
+      pasted.split('').forEach((ch, j) => {
+        if (inputs[j]) { inputs[j].value = ch; inputs[j].classList.add('filled'); }
+      });
+      const nextEmpty = [...inputs].findIndex(inp => !inp.value);
+      if (nextEmpty >= 0) inputs[nextEmpty].focus(); else inputs[inputs.length - 1].focus();
+      updateOTPSubmitState();
+    });
+  });
+}
+
+function getOTPValue() {
+  return [...document.querySelectorAll('#otp-inputs input')].map(i => i.value).join('');
+}
+
+function clearOTPInputs() {
+  document.querySelectorAll('#otp-inputs input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+  updateOTPSubmitState();
+}
+
+function updateOTPSubmitState() {
+  document.getElementById('otp-submit').disabled = getOTPValue().length < 6;
+}
+
+// OTP resend countdown
+let resendTimer = null;
+function startResendCooldown() {
+  let remaining = RESEND_COOLDOWN;
+  const btn = document.getElementById('otp-resend');
+  btn.disabled = true;
+  btn.textContent = `Renvoyer le code (${remaining}s)`;
+  clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(resendTimer);
+      btn.disabled = false;
+      btn.textContent = 'Renvoyer le code';
+    } else {
+      btn.textContent = `Renvoyer le code (${remaining}s)`;
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH — INIT
+// ═══════════════════════════════════════════════════════
 function initAuth() {
+  initOTPInputs();
+
+  // Toggle buttons
   document.querySelectorAll('.auth-toggle-btn').forEach(btn =>
-    btn.addEventListener('click', () => {
-      authMode = btn.dataset.mode;
-      document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Se connecter' : 'Créer un compte';
-      document.getElementById('auth-error').textContent = '';
-    })
+    btn.addEventListener('click', () => switchAuthPanel(btn.dataset.mode))
   );
 
-  document.getElementById('auth-form').addEventListener('submit', async e => {
+  // ── LOGIN FORM ──
+  document.getElementById('form-login').addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-    const errEl = document.getElementById('auth-error');
-    const btn = document.getElementById('auth-submit');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-submit');
     errEl.textContent = '';
     btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Connexion...';
 
-    if (authMode === 'register') {
-      const res = await API.register(email, password);
-      if (res) {
-        toast('Compte créé ! Connectez-vous.', 'success');
-        document.querySelector('.auth-toggle-btn[data-mode="login"]').click();
-      } else {
-        errEl.textContent = 'Erreur lors de l\'inscription.';
-      }
+    const res = await API.login(email, password);
+    if (res && res.access_token) {
+      // Store credentials, generate OTP, switch to OTP panel
+      accessToken = res.access_token;
+      currentUser = res.user;
+      loginEmail = email;
+      generateOTP();
+      // Simulate sending email
+      toast(`Code OTP envoyé à ${maskEmail(email)} (voir console)`, 'success');
+      document.getElementById('otp-context').innerHTML =
+        `Un code à 6 chiffres a été envoyé à <strong>${maskEmail(email)}</strong>. Entrez-le ci-dessous pour finaliser votre connexion.`;
+      clearOTPInputs();
+      switchAuthPanel('otp');
+      startResendCooldown();
     } else {
-      const res = await API.login(email, password);
-      if (res && res.access_token) {
-        accessToken = res.access_token;
-        currentUser = res.user;
-        showApp();
-      } else {
-        errEl.textContent = 'Email ou mot de passe incorrect.';
-      }
+      errEl.textContent = 'Email ou mot de passe incorrect.';
     }
     btn.disabled = false;
+    btn.textContent = 'Se connecter';
+  });
+
+  // ── OTP VERIFY ──
+  document.getElementById('otp-submit').addEventListener('click', () => {
+    const code = getOTPValue();
+    const errEl = document.getElementById('otp-error');
+    errEl.textContent = '';
+
+    const result = validateOTP(code);
+    if (result.ok) {
+      toast('Connexion réussie !', 'success');
+      showApp();
+    } else if (result.reason === 'expired') {
+      errEl.textContent = 'Ce code a expiré. Demandez-en un nouveau.';
+      clearOTPInputs();
+    } else if (result.reason === 'locked') {
+      errEl.textContent = `Trop de tentatives. Attendez avant de réessayer.`;
+      document.getElementById('otp-submit').disabled = true;
+    } else {
+      errEl.textContent = 'Code invalide. Vérifiez votre e-mail et réessayez.';
+      clearOTPInputs();
+    }
+  });
+
+  // OTP Back
+  document.getElementById('otp-back').addEventListener('click', () => {
+    accessToken = null;
+    currentUser = null;
+    clearInterval(resendTimer);
+    switchAuthPanel('login');
+  });
+
+  // OTP Resend
+  document.getElementById('otp-resend').addEventListener('click', () => {
+    generateOTP();
+    toast(`Nouveau code envoyé à ${maskEmail(loginEmail)} (voir console)`, 'success');
+    clearOTPInputs();
+    document.getElementById('otp-error').textContent = '';
+    startResendCooldown();
+  });
+
+  // ── REGISTER FORM — auto-generate username ──
+  const regPrenom = document.getElementById('reg-prenom');
+  const regNom = document.getElementById('reg-nom');
+  const regUsername = document.getElementById('reg-username');
+
+  function autoGenerateUsername() {
+    const p = regPrenom.value.trim();
+    const n = regNom.value.trim();
+    if (p && n) {
+      regUsername.value = generateUsername(p, n);
+      checkUsernameAvailability(regUsername.value);
+    }
+    validateRegisterForm();
+  }
+  regPrenom.addEventListener('input', autoGenerateUsername);
+  regNom.addEventListener('input', autoGenerateUsername);
+  regUsername.addEventListener('input', () => { checkUsernameAvailability(regUsername.value); validateRegisterForm(); });
+  document.getElementById('reg-username-regen').addEventListener('click', () => {
+    const p = regPrenom.value.trim();
+    const n = regNom.value.trim();
+    if (p && n) { regUsername.value = generateUsername(p, n); checkUsernameAvailability(regUsername.value); }
+  });
+
+  // Password strength + match
+  document.getElementById('reg-password').addEventListener('input', e => { updatePasswordStrength(e.target.value); checkPasswordMatch(); validateRegisterForm(); });
+  document.getElementById('reg-password2').addEventListener('input', () => { checkPasswordMatch(); validateRegisterForm(); });
+  document.getElementById('reg-email').addEventListener('input', validateRegisterForm);
+
+  // ── REGISTER SUBMIT ──
+  document.getElementById('form-register').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validateRegisterForm()) return;
+    const btn = document.getElementById('reg-submit');
+    const errEl = document.getElementById('reg-error');
+    errEl.textContent = '';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Création...';
+
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    const res = await API.register(email, password);
+    if (res) {
+      document.getElementById('confirm-text').innerHTML =
+        `Un e-mail de confirmation a été envoyé à <strong>${email}</strong>. Veuillez vérifier votre boîte mail pour activer votre compte.`;
+      switchAuthPanel('confirm');
+      // Reset form
+      document.getElementById('form-register').reset();
+      document.getElementById('pw-strength-fill').style.width = '0%';
+      document.getElementById('pw-strength-label').textContent = '';
+      document.getElementById('pw-match-msg').textContent = '';
+      document.getElementById('reg-username-status').textContent = '';
+    } else {
+      errEl.textContent = 'Erreur lors de l\'inscription. Vérifiez vos informations.';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Créer mon compte';
   });
 }
 
@@ -913,12 +1492,14 @@ function logout() {
   accessToken = null;
   currentUser = null;
   cart = [];
+  currentOTP = null;
+  clearInterval(resendTimer);
   if (hadToken) API.logoutReq();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app-shell').style.display = 'none';
-  document.getElementById('auth-email').value = '';
-  document.getElementById('auth-password').value = '';
-  document.getElementById('auth-error').textContent = '';
+  switchAuthPanel('login');
+  document.getElementById('form-login').reset();
+  document.getElementById('login-error').textContent = '';
   location.hash = '';
   isLoggingOut = false;
 }
@@ -1104,7 +1685,7 @@ async function submitOrder() {
     const res = await API.createClient({
       nom: currentUser?.email?.split('@')[0] || 'Client',
       prenom: '',
-      email: currentUser?.email || 'client@nocturn.app'
+      email: currentUser?.email || 'client@ptitcreux.app'
     });
     client = res?.data || res;
   }

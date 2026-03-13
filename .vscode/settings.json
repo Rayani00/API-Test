@@ -15,5 +15,6 @@
             "database": "postgres",
             "username": "postgres"
         }
-    ]
+    ],
+    "livePreview.defaultPreviewPath": "/index.html"
 }
