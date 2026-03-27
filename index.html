@@ -951,6 +951,7 @@ select {
         <button class="admin-tab" data-panel="admin-commandes">Commandes</button>
         <button class="admin-tab" data-panel="admin-livreurs">Livreurs</button>
         <button class="admin-tab" data-panel="admin-livraisons">Livraisons</button>
+        <button class="admin-tab" data-panel="admin-stats">Statistiques</button>
       </div>
 
       <!-- Admin: Restaurants -->
@@ -991,6 +992,13 @@ select {
           <div class="form-group" style="margin-bottom:12px"><label>Description</label><input id="ap-description" placeholder="Description"></div>
           <button class="btn-sm btn-accent" id="ap-submit">Créer</button>
         </div>
+        <div class="admin-form" style="padding:12px 16px">
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Rechercher un produit</label><input id="ap-search" placeholder="Tapez un nom de produit..."></div>
+            <button class="btn-sm btn-ghost" id="ap-search-btn" style="align-self:flex-end;margin-bottom:2px">Rechercher</button>
+            <button class="btn-sm btn-ghost" id="ap-search-clear" style="align-self:flex-end;margin-bottom:2px">Effacer</button>
+          </div>
+        </div>
         <div id="ap-table-wrap"></div>
       </div>
 
@@ -1024,6 +1032,11 @@ select {
           <button class="btn-sm btn-accent" id="alv-submit">Assigner</button>
         </div>
         <div id="alv-table-wrap"></div>
+      </div>
+
+      <!-- Admin: Statistiques -->
+      <div id="admin-stats" class="admin-panel">
+        <div id="stats-wrap"></div>
       </div>
     </section>
   </main>
@@ -1081,21 +1094,36 @@ const API = {
   getRestaurant(id) { return this.request('GET', `/api/restaurants/${id}`); },
   getRestaurantProduits(id) { return this.request('GET', `/api/restaurants/${id}/produits`); },
   createRestaurant(b) { return this.request('POST', '/api/restaurants', b); },
+  updateRestaurant(id, b) { return this.request('PUT', `/api/restaurants/${id}`, b); },
+  deleteRestaurant(id) { return this.request('DELETE', `/api/restaurants/${id}`); },
+  getRestaurantCommandes(id) { return this.request('GET', `/api/restaurants/${id}/commandes`); },
   getProduits() { return this.request('GET', '/api/produits'); },
   createProduit(b) { return this.request('POST', '/api/produits', b); },
   updateProduit(id, b) { return this.request('PUT', `/api/produits/${id}`, b); },
   deleteProduit(id) { return this.request('DELETE', `/api/produits/${id}`); },
+  searchProduits(q) { return this.request('GET', `/api/produits/search?q=${encodeURIComponent(q)}`); },
   getClients() { return this.request('GET', '/api/clients'); },
+  getClient(id) { return this.request('GET', `/api/clients/${id}`); },
   createClient(b) { return this.request('POST', '/api/clients', b); },
+  updateClient(id, b) { return this.request('PUT', `/api/clients/${id}`, b); },
+  deleteClient(id) { return this.request('DELETE', `/api/clients/${id}`); },
+  getClientCommandes(id) { return this.request('GET', `/api/clients/${id}/commandes`); },
   getCommandes() { return this.request('GET', '/api/commandes'); },
   getCommande(id) { return this.request('GET', `/api/commandes/${id}`); },
   createCommande(b) { return this.request('POST', '/api/commandes', b); },
+  deleteCommande(id) { return this.request('DELETE', `/api/commandes/${id}`); },
   updateStatut(id, statut) { return this.request('PATCH', `/api/commandes/${id}/statut`, { statut }); },
   getLivreurs() { return this.request('GET', '/api/livreurs'); },
+  getLivreur(id) { return this.request('GET', `/api/livreurs/${id}`); },
   createLivreur(b) { return this.request('POST', '/api/livreurs', b); },
+  updateLivreur(id, b) { return this.request('PUT', `/api/livreurs/${id}`, b); },
+  deleteLivreur(id) { return this.request('DELETE', `/api/livreurs/${id}`); },
+  getLivreurLivraisons(id) { return this.request('GET', `/api/livreurs/${id}/livraisons`); },
   getLivraisons() { return this.request('GET', '/api/livraisons'); },
   createLivraison(b) { return this.request('POST', '/api/livraisons', b); },
+  getLivraison(id) { return this.request('GET', `/api/livraisons/${id}`); },
   livrer(id) { return this.request('PATCH', `/api/livraisons/${id}/livrer`); },
+  getStatsDashboard() { return this.request('GET', '/api/stats/dashboard'); },
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -1361,18 +1389,10 @@ function initAuth() {
 
     const res = await API.login(email, password);
     if (res && res.access_token) {
-      // Store credentials, generate OTP, switch to OTP panel
       accessToken = res.access_token;
       currentUser = res.user;
-      loginEmail = email;
-      generateOTP();
-      // Simulate sending email
-      toast(`Code OTP envoyé à ${maskEmail(email)} (voir console)`, 'success');
-      document.getElementById('otp-context').innerHTML =
-        `Un code à 6 chiffres a été envoyé à <strong>${maskEmail(email)}</strong>. Entrez-le ci-dessous pour finaliser votre connexion.`;
-      clearOTPInputs();
-      switchAuthPanel('otp');
-      startResendCooldown();
+      toast('Connexion réussie !', 'success');
+      showApp();
     } else {
       errEl.textContent = 'Email ou mot de passe incorrect.';
     }
@@ -1682,9 +1702,10 @@ async function submitOrder() {
   let clients = arr(await API.getClients());
   let client = clients.find(c => c.email === currentUser?.email);
   if (!client) {
+    const emailLocal = currentUser?.email?.split('@')[0] || 'Client';
     const res = await API.createClient({
-      nom: currentUser?.email?.split('@')[0] || 'Client',
-      prenom: '',
+      nom: emailLocal,
+      prenom: emailLocal,
       email: currentUser?.email || 'client@ptitcreux.app'
     });
     client = res?.data || res;
@@ -1764,6 +1785,7 @@ async function loadAdminPanel(id) {
     case 'admin-commandes': await loadAC(); break;
     case 'admin-livreurs': await loadAL(); break;
     case 'admin-livraisons': await loadALV(); break;
+    case 'admin-stats': await loadStats(); break;
   }
 }
 
@@ -1772,9 +1794,13 @@ async function loadAR() {
   const w = document.getElementById('ar-table-wrap');
   w.innerHTML = loader();
   const rows = arr(await API.getRestaurants());
-  w.innerHTML = `<table class="admin-table"><thead><tr><th>Nom</th><th>Cuisine</th><th>Statut</th></tr></thead><tbody>
-    ${rows.map(r => `<tr><td>${esc(r.nom)}</td><td>${esc(r.cuisine)}</td><td><span class="badge ${r.actif!==false?'badge-active':'badge-inactive'}">${r.actif!==false?'Actif':'Inactif'}</span></td></tr>`).join('')}
-  </tbody></table>`;
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Nom</th><th>Cuisine</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.nom)}</td><td>${esc(r.cuisine)}</td><td><span class="badge ${r.actif!==false?'badge-active':'badge-inactive'}">${r.actif!==false?'Actif':'Inactif'}</span></td>
+      <td class="table-actions">
+        <button class="btn-sm btn-ghost" onclick="viewRestoCommandes('${r.id}','${esc(r.nom)}')">Commandes</button>
+        <button class="btn-sm btn-danger" onclick="delRestaurant('${r.id}')">Suppr.</button>
+      </td></tr>`).join('')}
+  </tbody></table></div>`;
 }
 document.getElementById('ar-submit').addEventListener('click', async () => {
   const nom = document.getElementById('ar-nom').value.trim();
@@ -1782,6 +1808,22 @@ document.getElementById('ar-submit').addEventListener('click', async () => {
   if (!nom) { toast('Nom requis.', 'error'); return; }
   if (await API.createRestaurant({ nom, cuisine })) { toast('Restaurant créé.','success'); document.getElementById('ar-nom').value=''; loadAR(); }
 });
+async function delRestaurant(id) { if (!confirm('Supprimer ce restaurant ?')) return; if (await API.deleteRestaurant(id)) { toast('Restaurant supprimé.','success'); loadAR(); } }
+async function viewRestoCommandes(id, nom) {
+  const w = document.getElementById('ar-table-wrap');
+  w.innerHTML = loader();
+  const orders = arr(await API.getRestaurantCommandes(id));
+  if (!orders.length) { w.innerHTML = `<p style="padding:16px;opacity:.7">Aucune commande pour ${esc(nom)}.</p><button class="btn-sm btn-ghost" onclick="loadAR()">Retour</button>`; return; }
+  w.innerHTML = `<h3 style="margin:12px 0">Commandes de ${esc(nom)}</h3>
+    <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead><tbody>
+    ${orders.map(o => {
+      const cn = o.clients ? `${o.clients.prenom||''} ${o.clients.nom||''}`.trim() : '—';
+      return `<tr><td style="font-family:var(--font-display);font-size:0.85rem">#${String(o.id).slice(0,8).toUpperCase()}</td>
+        <td>${esc(cn)}</td><td style="color:var(--accent);font-weight:600">${formatPrice(o.total)}</td>
+        <td><span class="badge badge-${o.statut==='livree'?'active':'inactive'}">${(o.statut||'').replace(/_/g,' ')}</span></td></tr>`;
+    }).join('')}
+    </tbody></table></div><button class="btn-sm btn-ghost" onclick="loadAR()" style="margin-top:8px">Retour</button>`;
+}
 
 /* --- Produits --- */
 async function loadAP() {
@@ -1825,30 +1867,36 @@ async function loadAC() {
   w.innerHTML = loader();
   const orders = arr(await API.getCommandes());
   const sts = ['en_attente','en_preparation','prete','en_livraison','livree','annulee'];
-  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead><tbody>
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Total</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
     ${orders.map(o => {
-      const cn = o.client ? `${o.client.prenom||''} ${o.client.nom||''}`.trim() : '—';
+      const cn = o.clients ? `${o.clients.prenom||''} ${o.clients.nom||''}`.trim() : (o.client ? `${o.client.prenom||''} ${o.client.nom||''}`.trim() : '—');
       return `<tr>
         <td style="font-family:var(--font-display);font-size:0.85rem">#${String(o.id).slice(0,8).toUpperCase()}</td>
         <td>${esc(cn)}</td>
         <td style="color:var(--accent);font-weight:600">${formatPrice(o.total)}</td>
         <td><select onchange="updStatus('${o.id}',this.value)">
           ${sts.map(s=>`<option value="${s}" ${o.statut===s?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
-        </select></td></tr>`;
+        </select></td>
+        <td class="table-actions"><button class="btn-sm btn-danger" onclick="delCommande('${o.id}')">Suppr.</button></td></tr>`;
     }).join('')}
   </tbody></table></div>`;
 }
 async function updStatus(id, st) { if (await API.updateStatut(id, st)) toast(`Statut : ${st.replace(/_/g,' ')}`,'success'); }
+async function delCommande(id) { if (!confirm('Supprimer cette commande ?')) return; if (await API.deleteCommande(id)) { toast('Commande supprimée.','success'); loadAC(); } }
 
 /* --- Livreurs --- */
 async function loadAL() {
   const w = document.getElementById('al-table-wrap');
   w.innerHTML = loader();
   const rows = arr(await API.getLivreurs());
-  w.innerHTML = `<table class="admin-table"><thead><tr><th>Nom</th><th>Prénom</th><th>Tél.</th><th>Statut</th></tr></thead><tbody>
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Nom</th><th>Prénom</th><th>Tél.</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
     ${rows.map(l => `<tr><td>${esc(l.nom)}</td><td>${esc(l.prenom)}</td><td>${esc(l.telephone)}</td>
-      <td><span class="badge ${l.statut==='disponible'?'badge-active':'badge-inactive'}">${esc(l.statut||'disponible')}</span></td></tr>`).join('')}
-  </tbody></table>`;
+      <td><span class="badge ${l.statut==='disponible'?'badge-active':'badge-inactive'}">${esc(l.statut||'disponible')}</span></td>
+      <td class="table-actions">
+        <button class="btn-sm btn-ghost" onclick="viewLivreurLivraisons('${l.id}','${esc(l.prenom)} ${esc(l.nom)}')">Livraisons</button>
+        <button class="btn-sm btn-danger" onclick="delLivreur('${l.id}')">Suppr.</button>
+      </td></tr>`).join('')}
+  </tbody></table></div>`;
 }
 document.getElementById('al-submit').addEventListener('click', async () => {
   const nom = document.getElementById('al-nom').value.trim();
@@ -1861,6 +1909,25 @@ document.getElementById('al-submit').addEventListener('click', async () => {
     loadAL();
   }
 });
+async function delLivreur(id) { if (!confirm('Supprimer ce livreur ?')) return; if (await API.deleteLivreur(id)) { toast('Livreur supprimé.','success'); loadAL(); } }
+async function viewLivreurLivraisons(id, nom) {
+  const w = document.getElementById('al-table-wrap');
+  w.innerHTML = loader();
+  const dlvs = arr(await API.getLivreurLivraisons(id));
+  if (!dlvs.length) { w.innerHTML = `<p style="padding:16px;opacity:.7">Aucune livraison pour ${esc(nom)}.</p><button class="btn-sm btn-ghost" onclick="loadAL()">Retour</button>`; return; }
+  w.innerHTML = `<h3 style="margin:12px 0">Livraisons de ${esc(nom)}</h3>
+    <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Commande</th><th>Adresse</th><th>Total</th><th>Statut</th></tr></thead><tbody>
+    ${dlvs.map(d => {
+      const cid = '#' + String(d.commande_id||d.commandes?.id||'').slice(0,8).toUpperCase();
+      const adr = d.commandes?.adresse_livraison || '—';
+      const total = d.commandes?.total || 0;
+      const done = d.statut==='livree'||d.statut==='livrée';
+      return `<tr><td style="font-family:var(--font-display);font-size:0.85rem">${cid}</td>
+        <td>${esc(adr)}</td><td style="color:var(--accent);font-weight:600">${formatPrice(total)}</td>
+        <td><span class="badge ${done?'badge-active':'badge-inactive'}">${esc(d.statut||'en cours')}</span></td></tr>`;
+    }).join('')}
+    </tbody></table></div><button class="btn-sm btn-ghost" onclick="loadAL()" style="margin-top:8px">Retour</button>`;
+}
 
 /* --- Livraisons --- */
 async function loadALV() {
@@ -1891,6 +1958,81 @@ document.getElementById('alv-submit').addEventListener('click', async () => {
   if (await API.createLivraison({ commande_id, livreur_id })) { toast('Livraison assignée.','success'); loadALV(); }
 });
 async function markLivree(id) { if (await API.livrer(id)) { toast('Livrée !','success'); loadALV(); } }
+
+/* --- Recherche produits --- */
+document.getElementById('ap-search-btn').addEventListener('click', async () => {
+  const q = document.getElementById('ap-search').value.trim();
+  if (!q) { toast('Tapez un mot-clé.','error'); return; }
+  const w = document.getElementById('ap-table-wrap');
+  w.innerHTML = loader();
+  const results = arr(await API.searchProduits(q));
+  if (!results.length) { w.innerHTML = `<p style="padding:16px;opacity:.7">Aucun produit trouvé pour "${esc(q)}".</p>`; return; }
+  w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Nom</th><th>Restaurant</th><th>Cat.</th><th>Prix</th><th>Dispo</th></tr></thead><tbody>
+    ${results.map(p => `<tr>
+      <td>${esc(p.nom)}</td><td>${esc(p.restaurants?.nom||'—')}</td><td>${esc(p.categorie)}</td>
+      <td>${formatPrice(p.prix)}</td>
+      <td>${p.disponible!==false?'<span class="badge badge-active">Oui</span>':'<span class="badge badge-inactive">Non</span>'}</td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+});
+document.getElementById('ap-search-clear').addEventListener('click', () => { document.getElementById('ap-search').value = ''; loadAP(); });
+
+/* --- Statistiques dashboard --- */
+async function loadStats() {
+  const w = document.getElementById('stats-wrap');
+  w.innerHTML = loader();
+  const stats = await API.getStatsDashboard();
+  if (!stats) { w.innerHTML = '<p style="padding:16px;opacity:.7">Impossible de charger les statistiques.</p>'; return; }
+
+  const statusLabels = { en_attente:'En attente', en_preparation:'En préparation', prete:'Prête', en_livraison:'En livraison', livree:'Livrée', annulee:'Annulée' };
+
+  w.innerHTML = `
+    <div class="grid grid-3" style="margin-bottom:24px">
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${formatPrice(stats.chiffre_affaires)}</div>
+        <div style="opacity:.7;margin-top:4px">Chiffre d'affaires</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${stats.total_commandes}</div>
+        <div style="opacity:.7;margin-top:4px">Commandes</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${stats.total_clients}</div>
+        <div style="opacity:.7;margin-top:4px">Clients</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${stats.total_restaurants}</div>
+        <div style="opacity:.7;margin-top:4px">Restaurants</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${stats.total_livreurs}</div>
+        <div style="opacity:.7;margin-top:4px">Livreurs</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;font-weight:700;color:var(--accent)">${stats.livreurs_disponibles}</div>
+        <div style="opacity:.7;margin-top:4px">Livreurs disponibles</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card" style="padding:20px">
+        <h3 style="margin:0 0 12px">Commandes par statut</h3>
+        <table class="admin-table"><tbody>
+          ${Object.entries(stats.commandes_par_statut||{}).map(([s,n]) =>
+            `<tr><td><span class="badge badge-${s==='livree'?'active':'inactive'}">${statusLabels[s]||s}</span></td><td style="font-weight:600">${n}</td></tr>`
+          ).join('')}
+        </tbody></table>
+      </div>
+      <div class="card" style="padding:20px">
+        <h3 style="margin:0 0 12px">Top 5 produits</h3>
+        <table class="admin-table"><thead><tr><th>Produit</th><th>Quantité</th></tr></thead><tbody>
+          ${(stats.top_produits||[]).map((p,i) =>
+            `<tr><td>${i+1}. ${esc(p.nom)}</td><td style="font-weight:600;color:var(--accent)">${p.quantite}</td></tr>`
+          ).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
 
 /* ═══════════════════════════════════════════════════════
    INIT

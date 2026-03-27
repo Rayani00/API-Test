@@ -79,6 +79,156 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageReponse"
 
+  /api/auth/resend-confirmation:
+    post:
+      summary: Renvoyer un email de confirmation de creation de compte
+      tags: [Auth]
+      security: []   # exemptee de l'auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "admin@darkkitchen.com"
+      responses:
+        "200":
+          description: Email renvoye avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/auth/reset-password:
+    post:
+      summary: Envoyer un email de reinitialisation de mot de passe
+      tags: [Auth]
+      security: []   # exemptee de l'auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "admin@darkkitchen.com"
+      responses:
+        "200":
+          description: Email envoye avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/auth/update-email:
+    put:
+      summary: Modifier l'email de l'utilisateur connecte
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "nouveau-mail@darkkitchen.com"
+      responses:
+        "200":
+          description: Modification reussie (un email de confirmation est envoye)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Non connecte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erreur"
+
+  /api/auth/delete-account:
+    delete:
+      summary: Supprimer le compte de l'utilisateur connecte
+      tags: [Auth]
+      responses:
+        "200":
+          description: Compte supprime avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+        "401":
+          description: Non connecte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erreur"
+        "500":
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erreur"
+
+  /api/auth/users/{id}/password:
+    put:
+      summary: Changer le mot de passe d'un utilisateur par son ID (admin)
+      tags: [Auth]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: UUID de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "NouveauMotDePasse123"
+      responses:
+        "200":
+          description: Mot de passe mis a jour avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageReponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Non connecte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erreur"
+
   /api/auth/me:
     get:
       summary: Infos de l'utilisateur connecte
